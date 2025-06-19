@@ -10,29 +10,33 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-      - name: Checkout repo
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Setup Python
+      - name: Setup Python 3.10
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
 
-      - name: Install dependencies including git
+      - name: Install system dependencies (including git)
         run: |
           sudo apt-get update
           sudo apt-get install -y git openjdk-17-jdk unzip wget curl build-essential \
             libssl-dev libffi-dev python3-pip ant autoconf automake cmake libtool pkg-config
-          git --version  # ตรวจสอบว่า git ติดตั้งจริง
 
-      - name: Set environment variables
+          git --version
+          java -version
+          javac -version
+          ant -version
+
+      - name: Set Environment Variables
         run: |
           echo "JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64" >> $GITHUB_ENV
-          echo "ANT_HOME=/usr/share/ant" >> $GITHUB_ENV
           echo "/usr/lib/jvm/java-17-openjdk-amd64/bin" >> $GITHUB_PATH
+          echo "ANT_HOME=/usr/share/ant" >> $GITHUB_ENV
           echo "/usr/share/ant/bin" >> $GITHUB_PATH
 
-      - name: Setup Android SDK
+      - name: Setup Android SDK and NDK
         run: |
           export ANDROIDSDK=$HOME/.buildozer/android/platform/android-sdk
           mkdir -p "$ANDROIDSDK/cmdline-tools"
@@ -42,17 +46,17 @@ jobs:
           mv cmdline-tools cmdline-tools-temp
           mv cmdline-tools-temp latest
           echo "ANDROIDSDK=$ANDROIDSDK" >> $GITHUB_ENV
-          echo "ANDROIDNDK=$ANDROIDSDK/ndk/25.2.9519653" >> $GITHUB_ENV
+          echo "ANDROIDNDK=$ANDROIDSDK/ndk/21.4.7075529" >> $GITHUB_ENV
           echo "ANDROIDAPI=33" >> $GITHUB_ENV
           echo "$ANDROIDSDK/cmdline-tools/latest/bin" >> $GITHUB_PATH
           echo "$ANDROIDSDK/platform-tools" >> $GITHUB_PATH
 
-      - name: Accept licenses and install Android packages
+      - name: Accept Licenses and Install Android Packages
         run: |
           export ANDROIDSDK=$HOME/.buildozer/android/platform/android-sdk
           yes | $ANDROIDSDK/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROIDSDK --licenses || true
           $ANDROIDSDK/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROIDSDK --install \
-            "platform-tools" "platforms;android-33" "build-tools;33.0.2" "ndk;25.2.9519653"
+            "platform-tools" "platforms;android-33" "build-tools;33.0.2" "ndk;21.4.7075529"
 
       - name: Clone python-for-android
         run: |
@@ -64,24 +68,26 @@ jobs:
             cd python-for-android && git pull
           fi
 
-      - name: Install Python dependencies
+      - name: Install Python Dependencies
         run: |
           python3 -m pip install --upgrade pip setuptools wheel
           python3 -m pip install buildozer==1.5.0 cython==0.29.33 colorama appdirs sh jinja2 six packaging toml
 
-      - name: Install local python-for-android
+      - name: Install Local python-for-android
         run: python3 -m pip install -e ./.buildozer/android/platform/python-for-android
 
-      - name: Clean previous builds
+      - name: Clean Previous Builds
         run: rm -rf ./.buildozer/android/platform/build-* ./.buildozer/android/app
 
       - name: Build APK
         env:
+          JAVA_HOME: ${{ env.JAVA_HOME }}
+          ANT_HOME: ${{ env.ANT_HOME }}
           ANDROIDSDK: ${{ env.ANDROIDSDK }}
           ANDROIDNDK: ${{ env.ANDROIDNDK }}
           ANDROIDAPI: ${{ env.ANDROIDAPI }}
-          JAVA_HOME: ${{ env.JAVA_HOME }}
-          PATH: ${{ env.ANDROIDSDK }}/cmdline-tools/latest/bin:${{ env.ANDROIDSDK }}/platform-tools:/usr/lib/jvm/java-17-openjdk-amd64/bin:/usr/share/ant/bin:$PATH
+          PATH: ${{ env.PATH }}
+          LEGACY_NDK: ${{ env.ANDROIDSDK }}/ndk/21.4.7075529  # กำหนด LEGACY_NDK ให้เป็น NDK ที่ใช้ gcc (r21e)
         run: |
           buildozer android clean
           buildozer android debug
@@ -93,7 +99,7 @@ jobs:
           name: android-apk
           path: bin/*.apk
 
-      - name: Upload logs on failure
+      - name: Upload Build Logs on Failure
         if: failure()
         uses: actions/upload-artifact@v4
         with:
