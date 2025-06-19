@@ -33,11 +33,12 @@ jobs:
           unzip commandlinetools-linux-9477386_latest.zip
           rm commandlinetools-linux-9477386_latest.zip
 
-          mv cmdline-tools latest
+          # เนื่องจาก unzip จะได้ cmdline-tools ซ้อน cmdline-tools อีกชั้น ให้จัดการแบบนี้
+          mv cmdline-tools cmdline-tools-temp
+          mv cmdline-tools-temp latest
 
           export ANDROID_SDK_ROOT=$HOME/.buildozer/android/platform/android-sdk
-          export PATH=$PATH:$ANDROID_SDK_ROOT/cmdline-tools/latest/bin
-          export PATH=$PATH:$ANDROID_SDK_ROOT/platform-tools
+          export PATH=$PATH:$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools
 
           yes | sdkmanager --sdk_root=$ANDROID_SDK_ROOT --licenses || true
 
@@ -66,7 +67,6 @@ jobs:
       - name: Clean previous build files
         run: |
           rm -rf ./.buildozer
-          rm -rf $HOME/.buildozer/android/platform/build-*/
           rm -rf $HOME/.buildozer/android/platform/build-*/
 
       - name: Build APK
