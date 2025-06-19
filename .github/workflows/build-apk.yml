@@ -8,7 +8,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-20.04  # Use Ubuntu 20.04 for better compatibility
+    runs-on: ubuntu-22.04
 
     steps:
       - uses: actions/checkout@v4
@@ -36,12 +36,16 @@ jobs:
             zlib1g-dev \
             libncurses5-dev \
             libncursesw5-dev \
-            libtinfo5 \
             cmake \
             libltdl-dev \
             libreadline-dev \
             libsqlite3-dev \
             libssl-dev
+
+      - name: Fix libtinfo5 dependency (Ubuntu 22.04 compatibility)
+        run: |
+          # Create symbolic link for libtinfo5 compatibility
+          sudo ln -sf /lib/x86_64-linux-gnu/libtinfo.so.6 /lib/x86_64-linux-gnu/libtinfo.so.5
 
       - name: Set JAVA_HOME
         run: |
