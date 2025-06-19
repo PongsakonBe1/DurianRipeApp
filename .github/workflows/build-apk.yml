@@ -55,7 +55,7 @@ jobs:
               'platform-tools' \
               'platforms;android-33' \
               'build-tools;33.0.2' \
-              'ndk;25'
+              'ndk;ndk;25.2.9519653'
 
       - name: Symlink legacy tools
         run: |
