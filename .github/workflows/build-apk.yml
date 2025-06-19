@@ -12,7 +12,7 @@ jobs:
 
     env:
       ANDROID_SDK_ROOT: /home/runner/Android/Sdk
-      ANDROID_NDK_VERSION: "21.4.7075529"  # NDK r21e ที่แนะนำ
+      ANDROID_NDK_VERSION: "21.4.7075529"  # NDK r21e
       ANDROID_API_LEVEL: "33"
       JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
 
@@ -47,11 +47,12 @@ jobs:
           yes | sdkmanager --sdk_root=$ANDROID_SDK_ROOT --licenses
           sdkmanager --sdk_root=$ANDROID_SDK_ROOT "platform-tools" "platforms;android-$ANDROID_API_LEVEL" "build-tools;33.0.2" "ndk;$ANDROID_NDK_VERSION"
 
-      - name: Upgrade pip, setuptools, wheel
+      - name: Upgrade pip, setuptools, wheel to compatible versions
         run: |
-          python3 -m pip install --upgrade pip setuptools wheel
+          python3 -m pip install --upgrade pip
+          python3 -m pip install setuptools==65.5.0 wheel
 
-      - name: Install sh module pinned version
+      - name: Install specific 'sh' version to fix build error
         run: |
           python3 -m pip install sh==1.14.3
 
@@ -59,9 +60,9 @@ jobs:
         run: |
           python3 -m pip install buildozer==1.5.0 cython==0.29.33
 
-      - name: Install python-for-android
+      - name: Install python-for-android pinned version
         run: |
-          python3 -m pip install --force-reinstall --no-cache-dir python-for-android
+          python3 -m pip install python-for-android==2023.10.1
 
       - name: Build APK with Buildozer
         env:
