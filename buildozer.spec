@@ -36,7 +36,7 @@ version = 0.1
 
 # (list) Application requirements
 # comma separated e.g. requirements = sqlite3,kivy
-requirements = python3,kivy,kivymd,numpy,tflite-runtime
+requirements = python3,kivy,kivymd,numpy,tflite-runtime,pyjnius,librosa,soundfile,scipy
 
 # (str) Custom source folders for requirements
 # Sets custom source for any requirements with recipes
@@ -83,7 +83,7 @@ fullscreen = 0
 #android.presplash_color = #FFFFFF
 
 # (list) Permissions
-#android.permissions = INTERNET
+android.permissions = RECORD_AUDIO,WRITE_EXTERNAL_STORAGE,READ_EXTERNAL_STORAGE
 
 # (int) Target Android API, should be as high as possible.
 android.api = 33

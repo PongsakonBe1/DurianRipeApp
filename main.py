@@ -1,3 +1,4 @@
+import platform
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.label import Label
@@ -147,50 +148,75 @@ class DurianApp(App):
 
     def record_audio(self, instance):
         import librosa.effects
-
-        fs = 22050
-        duration = 10  # 10 วินาที
         self.result_label.text = "กำลังอัดเสียง..."
-        self.record_button.disabled = True  # ปิดปุ่มอัดเสียงระหว่างอัด
+        self.record_button.disabled = True
 
         def _record_thread():
             try:
-                audio = sd.rec(int(duration * fs), samplerate=fs, channels=1)
-                sd.wait()
+                if platform.system() == 'Linux' and platform.release().startswith('5') and 'ANDROID_ARGUMENT' in os.environ:
+                    # รันบน Android → ใช้ MediaRecorder
+                    from jnius import autoclass
+                    from android.permissions import request_permissions, Permission
+                    from android.storage import app_storage_path
 
-                audio = audio.flatten()  # แปลงเป็น array 1D
+                    request_permissions([Permission.RECORD_AUDIO, Permission.WRITE_EXTERNAL_STORAGE])
+                    app_path = app_storage_path()
+                    self.audio_path = os.path.join(app_path, "audio.wav")
 
-                # ลด noise ด้วย bandpass filter (กำหนดช่วง 300 - 5000 Hz)
-                audio = self.bandpass_filter(audio, lowcut=300, highcut=5000, fs=fs, order=4)
+                    MediaRecorder = autoclass('android.media.MediaRecorder')
+                    recorder = MediaRecorder()
 
-                # Normalize
-                peak = np.max(np.abs(audio))
-                if peak > 0:
-                    audio = audio / peak * 0.9
+                    recorder.setAudioSource(MediaRecorder.AudioSource.MIC)
+                    recorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP)
+                    recorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB)
+                    recorder.setOutputFile(self.audio_path)
 
-                # เพิ่ม pre-emphasis (เน้นความถี่สูง)
-                audio = librosa.effects.preemphasis(audio, coef=0.97)
+                    recorder.prepare()
+                    recorder.start()
 
-                # เพิ่ม gain 3 เท่า
-                gain = 1
-                boosted_audio = audio * gain
+                    import time
+                    time.sleep(10)
 
-                # Clip ไม่ให้เกิน -1 ถึง 1
-                boosted_audio = np.clip(boosted_audio, -1.0, 1.0)
+                    recorder.stop()
+                    recorder.release()
 
-                # บันทึกไฟล์เสียง
-                sf.write(self.audio_path, boosted_audio, fs)
+                    self.update_status("บันทึกเสียงเสร็จแล้ว (Android)")
+                    self.play_button.disabled = False
+                    self.debug_audio(self.audio_path)
 
-                self.update_status("บันทึกเสียงเสร็จแล้ว (ลดเสียงรบกวน + เพิ่มความดัง)")
-                self.play_button.disabled = False  # เปิดใช้งานปุ่มฟังเสียง
-                self.debug_audio(self.audio_path)
+                else:
+                    # รันบนคอมพิวเตอร์ → ใช้ sounddevice
+                    fs = 22050
+                    duration = 10
+                    audio = sd.rec(int(duration * fs), samplerate=fs, channels=1)
+                    sd.wait()
+                    audio = audio.flatten()
+
+                    audio = self.bandpass_filter(audio, lowcut=300, highcut=5000, fs=fs, order=4)
+
+                    peak = np.max(np.abs(audio))
+                    if peak > 0:
+                        audio = audio / peak * 0.9
+
+                    audio = librosa.effects.preemphasis(audio, coef=0.97)
+
+                    gain = 1
+                    boosted_audio = audio * gain
+                    boosted_audio = np.clip(boosted_audio, -1.0, 1.0)
+
+                    sf.write(self.audio_path, boosted_audio, fs)
+                    self.update_status("บันทึกเสียงเสร็จแล้ว (ลดเสียงรบกวน + เพิ่มความดัง)")
+                    self.play_button.disabled = False
+                    self.debug_audio(self.audio_path)
+
             except Exception as e:
                 self.update_status(f"เกิดข้อผิดพลาด: {e}")
                 print(e)
             finally:
-                self.record_button.disabled = False  # เปิดปุ่มอัดเสียงกลับมา
+                self.record_button.disabled = False
 
         threading.Thread(target=_record_thread).start()
+
 
     def debug_audio(self, path):
         try:
