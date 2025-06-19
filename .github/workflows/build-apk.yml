@@ -33,12 +33,12 @@ jobs:
           unzip commandlinetools-linux-9477386_latest.zip
           rm commandlinetools-linux-9477386_latest.zip
 
-          # เนื่องจาก unzip จะได้ cmdline-tools ซ้อน cmdline-tools อีกชั้น ให้จัดการแบบนี้
+          # แก้ปัญหาซ้อน cmdline-tools folder
           mv cmdline-tools cmdline-tools-temp
           mv cmdline-tools-temp latest
 
           export ANDROID_SDK_ROOT=$HOME/.buildozer/android/platform/android-sdk
-          export PATH=$PATH:$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools
+          export PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools:$PATH
 
           yes | sdkmanager --sdk_root=$ANDROID_SDK_ROOT --licenses || true
 
@@ -47,11 +47,12 @@ jobs:
           echo "ANDROIDNDK=$ANDROID_SDK_ROOT/ndk/25.2.9519653" >> $GITHUB_ENV
           echo "ANDROIDAPI=33" >> $GITHUB_ENV
           echo "ANDROIDSDK=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
+          echo "PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools:$PATH" >> $GITHUB_ENV
 
       - name: Clone python-for-android repo
         run: |
-          mkdir -p $HOME/.buildozer/android/platform
-          cd $HOME/.buildozer/android/platform
+          mkdir -p ./.buildozer/android/platform
+          cd ./.buildozer/android/platform
           if [ ! -d "python-for-android" ]; then
             git clone https://github.com/kivy/python-for-android.git
           else
@@ -67,7 +68,7 @@ jobs:
       - name: Clean previous build files
         run: |
           rm -rf ./.buildozer
-          rm -rf $HOME/.buildozer/android/platform/build-*/
+          rm -rf ./.buildozer/android/platform/build-*/
 
       - name: Build APK
         env:
