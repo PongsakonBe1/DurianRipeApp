@@ -27,7 +27,7 @@ jobs:
       - name: Set JAVA_HOME
         run: echo "JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64" >> $GITHUB_ENV
 
-      - name: Setup Android SDK & NDK (with legacy NDK r21d)
+      - name: Setup Android SDK & NDK (using legacy NDK r19c with gfortran)
         run: |
           mkdir -p $HOME/.buildozer/android/platform/android-sdk/cmdline-tools
           cd $HOME/.buildozer/android/platform/android-sdk/cmdline-tools
@@ -44,18 +44,18 @@ jobs:
 
           yes | sdkmanager --sdk_root=$ANDROID_SDK_ROOT --licenses || true
 
-          sdkmanager --sdk_root=$ANDROID_SDK_ROOT "platform-tools" "platforms;android-33" "build-tools;33.0.2"
+          sdkmanager --sdk_root=$ANDROID_SDK_ROOT "platform-tools" "platforms;android-28" "build-tools;28.0.3"
 
-          # ดาวน์โหลด NDK r21d ที่มี gfortran อยู่แล้ว
+          # ดาวน์โหลดและแตกไฟล์ NDK r19c
           mkdir -p $ANDROID_SDK_ROOT/ndk
           cd $ANDROID_SDK_ROOT/ndk
-          wget https://dl.google.com/android/repository/android-ndk-r21d-linux-x86_64.zip
-          unzip android-ndk-r21d-linux-x86_64.zip
-          rm android-ndk-r21d-linux-x86_64.zip
+          wget https://dl.google.com/android/repository/android-ndk-r19c-linux-x86_64.zip
+          unzip android-ndk-r19c-linux-x86_64.zip
+          rm android-ndk-r19c-linux-x86_64.zip
 
-          echo "ANDROIDNDK=$ANDROID_SDK_ROOT/ndk/android-ndk-r21d" >> $GITHUB_ENV
-          echo "LEGACY_NDK=$ANDROID_SDK_ROOT/ndk/android-ndk-r21d" >> $GITHUB_ENV
-          echo "ANDROIDAPI=33" >> $GITHUB_ENV
+          echo "ANDROIDNDK=$ANDROID_SDK_ROOT/ndk/android-ndk-r19c" >> $GITHUB_ENV
+          echo "LEGACY_NDK=$ANDROID_SDK_ROOT/ndk/android-ndk-r19c" >> $GITHUB_ENV
+          echo "ANDROIDAPI=28" >> $GITHUB_ENV
           echo "ANDROIDSDK=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
           echo "PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools:$PATH" >> $GITHUB_ENV
 
@@ -96,8 +96,8 @@ jobs:
         env:
           ANDROIDSDK: ${{ env.ANDROIDSDK }}
           ANDROIDNDK: ${{ env.ANDROIDNDK }}
-          LEGACY_NDK: ${{ env.LEGACY_NDK }}
           ANDROIDAPI: ${{ env.ANDROIDAPI }}
+          LEGACY_NDK: ${{ env.LEGACY_NDK }}
           JAVA_HOME: ${{ env.JAVA_HOME }}
           PATH: ${{ env.PATH }}:${{ env.JAVA_HOME }}/bin
         run: |

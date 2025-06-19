@@ -86,7 +86,7 @@ fullscreen = 0
 android.permissions = RECORD_AUDIO,WRITE_EXTERNAL_STORAGE,READ_EXTERNAL_STORAGE
 
 # (int) Target Android API, should be as high as possible.
-android.api = 33
+android.api = 28
 
 # (int) Minimum API your APK / AAB will support.
 android.minapi = 24
@@ -95,7 +95,7 @@ android.minapi = 24
 android.sdk = 33
 
 # (str) Android NDK version to use
-android.ndk = 25b
+android.ndk = 19c
 
 # (int) Android NDK API to use. This is the minimum API your app will support, 
 # it should usually match android.minapi.
@@ -105,7 +105,7 @@ android.ndk_api = 24
 android.private_storage = True
 
 # (str) Android NDK directory (if empty, it will be automatically downloaded.)
-#android.ndk_path =
+android.ndk_path = /home/runner/.buildozer/android/platform/android-sdk/ndk/android-ndk-r19c
 
 # (str) Android SDK directory (if empty, it will be automatically downloaded.)
 android.sdk_path = /home/runner/.buildozer/android/platform/android-sdk
