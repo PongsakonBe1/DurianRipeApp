@@ -82,8 +82,6 @@ jobs:
           JAVA_HOME: ${{ env.JAVA_HOME }}
           PATH: /usr/bin:${{ env.PATH }}:${{ env.JAVA_HOME }}/bin:${{ env.ANDROIDSDK }}/cmdline-tools/latest/bin
         run: |
-          which git
-          git --version
           buildozer android clean
           buildozer android debug
 
