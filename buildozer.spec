@@ -95,7 +95,7 @@ android.minapi = 21
 #android.sdk = 33
 
 # (str) Android NDK version to use
-android.ndk = r21e
+android.ndk = 21b
 
 # (int) Android NDK API to use. This is the minimum API your app will support, 
 # it should usually match android.minapi.
