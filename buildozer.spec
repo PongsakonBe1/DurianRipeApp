@@ -22,6 +22,7 @@ version = 0.1
 
 # นี่คือบรรทัดที่สำคัญมาก! ต้องมีและไม่มี '#' นำหน้า
 target = android
+android.build_tools_version = 33.0.2
 
 # (str) Application versioning (method 2)
 # version.regex = __version__ = ['"](.*)['"]

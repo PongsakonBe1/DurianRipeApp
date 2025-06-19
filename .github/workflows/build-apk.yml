@@ -29,6 +29,9 @@ jobs:
           python -m pip install --upgrade pip setuptools wheel
           python -m pip install buildozer cython
 
+      - name: Clean Android SDK folder (remove cache)
+        run: rm -rf $HOME/android-sdk
+
       - name: Setup Android SDK cmdline-tools
         run: |
           mkdir -p $HOME/android-sdk/cmdline-tools
@@ -36,6 +39,8 @@ jobs:
           wget https://dl.google.com/android/repository/commandlinetools-linux-8512546_latest.zip -O cmdline-tools.zip
           unzip cmdline-tools.zip
           rm cmdline-tools.zip
+          # ตรวจสอบชื่อโฟลเดอร์ที่ unzip ได้ (ปกติจะได้โฟลเดอร์ cmdline-tools)
+          ls -l
           mv cmdline-tools latest
 
       - name: Accept Android SDK licenses
@@ -44,7 +49,7 @@ jobs:
       - name: Install Android SDK packages
         run: |
           $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/android-sdk \
-          "platform-tools" "platforms;android-33" "build-tools;33.0.2" "ndk;25.2.9519653"
+            "platform-tools" "platforms;android-33" "build-tools;33.0.2" "ndk;25.2.9519653"
 
       - name: Check build-tools folder
         run: ls -l $HOME/android-sdk/build-tools
