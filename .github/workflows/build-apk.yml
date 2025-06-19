@@ -12,13 +12,16 @@ jobs:
 
     env:
       ANDROID_SDK_ROOT: /home/runner/Android/Sdk
-      ANDROID_NDK_VERSION: "21.4.7075529"  # NDK r21e ที่แนะนำ
+      ANDROID_NDK_VERSION: "21.4.7075529"  # NDK r21e
       ANDROID_API_LEVEL: "33"
       JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Clean buildozer cache
+        run: rm -rf ./.buildozer
 
       - name: Install system dependencies
         run: |
@@ -49,9 +52,9 @@ jobs:
 
       - name: Upgrade pip, setuptools, wheel
         run: |
-          python3 -m pip install --upgrade pip setuptools==65.5.0 wheel
+          python3 -m pip install --upgrade pip setuptools wheel
 
-      - name: Install pinned sh module (fix compatibility)
+      - name: Install pinned sh module (fix build issue)
         run: |
           python3 -m pip install sh==1.14.3
 
@@ -59,9 +62,9 @@ jobs:
         run: |
           python3 -m pip install buildozer==1.5.0 cython==0.29.33
 
-      - name: Install python-for-android pinned version
+      - name: Install python-for-android (latest stable)
         run: |
-          python3 -m pip install python-for-android==2024.1.21
+          python3 -m pip install python-for-android
 
       - name: Build APK with Buildozer
         env:

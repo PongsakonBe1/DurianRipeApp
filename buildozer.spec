@@ -36,7 +36,7 @@ version = 0.1
 
 # (list) Application requirements
 # comma separated e.g. requirements = sqlite3,kivy
-requirements = python3,kivy,kivymd,numpy,tflite-runtime,pyjnius,librosa,soundfile,scipy
+requirements = python3,kivy,kivymd,numpy,tflite-runtime,pyjnius,librosa,soundfile,scipy, ,sh==1.14.3
 
 # (str) Custom source folders for requirements
 # Sets custom source for any requirements with recipes
@@ -110,10 +110,10 @@ android.legacy_ndk = True
 
 
 # (str) Android NDK directory (if empty, it will be automatically downloaded.)
-#android.ndk_path = /home/runner/.buildozer/android/platform/android-sdk/ndk/25.2.9519653
+android.ndk_path = /home/runner/Android/Sdk/ndk/$ANDROID_NDK_VERSION
 
 # (str) Android SDK directory (if empty, it will be automatically downloaded.)
-#android.sdk_path = /home/runner/.buildozer/android/platform/android-sdk
+android.sdk_path = /home/runner/Android/Sdk
 
 # (bool) If True, then skip trying to update the Android sdk
 # This can be useful to avoid excess Internet downloads or save time
