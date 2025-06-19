@@ -11,10 +11,10 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-      - name: Checkout repo
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Python 3.10
+      - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
@@ -22,43 +22,82 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y openjdk-17-jdk unzip wget curl build-essential libssl-dev libffi-dev python3-pip
+          sudo apt-get install -y \
+            git openjdk-17-jdk unzip wget curl build-essential \
+            libssl-dev libffi-dev python3-pip zip libtinfo5
 
-      - name: Fix libtinfo5 dependency (Ubuntu 22.04)
-        run: |
-          sudo ln -sf /lib/x86_64-linux-gnu/libtinfo.so.6 /lib/x86_64-linux-gnu/libtinfo.so.5
-
-      - name: Set JAVA_HOME environment variable
+      - name: Set JAVA_HOME
         run: |
           echo "JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64" >> $GITHUB_ENV
-          echo "PATH=$PATH:/usr/lib/jvm/java-17-openjdk-amd64/bin" >> $GITHUB_ENV
+          echo "/usr/lib/jvm/java-17-openjdk-amd64/bin" >> $GITHUB_PATH
 
-      - name: Install Python dependencies (Buildozer, python-for-android, etc)
+      - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip setuptools wheel
-          python -m pip install buildozer==1.5.0 cython==0.29.33 python-for-android==2023.9.16 colorama appdirs sh jinja2 six
+          pip install buildozer==1.5.0 cython==0.29.33
 
-      - name: Clean previous build artifacts
+      - name: Clean previous builds
         run: |
           rm -rf ./.buildozer
           rm -rf ./bin
+          rm -rf $HOME/.buildozer
 
-      - name: Build APK with Buildozer
+      - name: Set up Android SDK
         run: |
+          mkdir -p $HOME/.buildozer/android/platform
+          cd $HOME/.buildozer/android/platform
+
+          wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip
+          unzip commandlinetools-linux-9477386_latest.zip
+          rm commandlinetools-linux-9477386_latest.zip
+
+          mkdir -p android-sdk/cmdline-tools
+          mv cmdline-tools android-sdk/cmdline-tools/latest
+
+          echo "ANDROIDSDK=$HOME/.buildozer/android/platform/android-sdk" >> $GITHUB_ENV
+          echo "$HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin" >> $GITHUB_PATH
+          echo "$HOME/.buildozer/android/platform/android-sdk/platform-tools" >> $GITHUB_PATH
+
+      - name: Accept SDK licenses
+        run: |
+          yes | sdkmanager --sdk_root=$HOME/.buildozer/android/platform/android-sdk --licenses
+
+      - name: Install SDK components
+        run: |
+          sdkmanager --sdk_root=$HOME/.buildozer/android/platform/android-sdk \
+            "platform-tools" \
+            "platforms;android-33" \
+            "build-tools;33.0.2" \
+            "ndk;25.2.9519653"
+
+          echo "ANDROIDNDK=$HOME/.buildozer/android/platform/android-sdk/ndk/25.2.9519653" >> $GITHUB_ENV
+          echo "ANDROIDAPI=33" >> $GITHUB_ENV
+
+      - name: Verify environment
+        run: |
+          java -version
+          python3 --version
+          echo "JAVA_HOME: $JAVA_HOME"
+          echo "ANDROIDSDK: $ANDROIDSDK"
+          echo "ANDROIDNDK: $ANDROIDNDK"
+          echo "ANDROIDAPI: $ANDROIDAPI"
+
+      - name: Build APK
+        run: |
+          buildozer android clean
           buildozer android debug --verbose
 
-      - name: Upload APK artifact (if build succeeds)
+      - name: Upload APK
         uses: actions/upload-artifact@v4
-        if: success()
         with:
           name: android-apk
           path: bin/*.apk
           retention-days: 30
 
-      - name: Upload build logs (if build fails)
-        uses: actions/upload-artifact@v4
+      - name: Upload logs if build fails
         if: failure()
+        uses: actions/upload-artifact@v4
         with:
           name: build-logs
-          path: .buildozer/android/platform/build-*/
+          path: .buildozer/android/platform/build-*
           retention-days: 7
