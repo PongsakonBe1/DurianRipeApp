@@ -47,26 +47,24 @@ jobs:
           yes | sdkmanager --sdk_root=$ANDROID_SDK_ROOT --licenses
           sdkmanager --sdk_root=$ANDROID_SDK_ROOT "platform-tools" "platforms;android-$ANDROID_API_LEVEL" "build-tools;33.0.2" "ndk;$ANDROID_NDK_VERSION"
 
-      - name: Upgrade pip and downgrade setuptools to fix sh build issue
+      - name: Upgrade pip and pin setuptools to fix sh build issue
         run: |
           python3 -m pip install --upgrade pip
           python3 -m pip install setuptools==65.5.0
 
-      - name: Install sh module pinned version
-        run: |
-          python3 -m pip install sh==1.14.3
+      - name: Install sh pinned version
+        run: python3 -m pip install sh==1.14.3
 
       - name: Install buildozer, cython, python-for-android
-        run: |
-          python3 -m pip install buildozer==1.5.0 cython==0.29.33 python-for-android==2024.1.21
+        run: python3 -m pip install buildozer==1.5.0 cython==0.29.33 python-for-android==2024.1.21
 
       - name: Clean previous builds
-        run: buildozer android clean
+        run: buildozer android clean || true
 
-      - name: Clone python-for-android repo (workaround)
+      # ถ้าเจอ error แบบหาโฟลเดอร์ python-for-android ไม่เจอ ให้สร้างโฟลเดอร์นี้ก่อน
+      - name: Create python-for-android folder if missing
         run: |
-          mkdir -p .buildozer/android/platform
-          git clone https://github.com/kivy/python-for-android.git .buildozer/android/platform/python-for-android
+          mkdir -p ./.buildozer/android/platform/python-for-android || true
 
       - name: Build APK with Buildozer
         env:
