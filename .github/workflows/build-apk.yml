@@ -33,7 +33,6 @@ jobs:
           unzip commandlinetools-linux-9477386_latest.zip
           rm commandlinetools-linux-9477386_latest.zip
 
-          # แก้ปัญหาซ้อน cmdline-tools folder
           mv cmdline-tools cmdline-tools-temp
           mv cmdline-tools-temp latest
 
@@ -60,14 +59,14 @@ jobs:
             git pull
           fi
 
-      - name: Check python-for-android folder
-        run: |
-          ls -l ./.buildozer/android/platform/python-for-android
-
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip setuptools wheel
-          python -m pip install buildozer==1.5.0 cython==0.29.33 colorama appdirs sh jinja2 six
+          python -m pip install buildozer==1.5.0 cython==0.29.33 colorama appdirs sh jinja2 six packaging toml
+
+      - name: Install python-for-android locally
+        run: |
+          pip install -e ./.buildozer/android/platform/python-for-android
 
       - name: Clean previous build files (exclude python-for-android)
         run: |
@@ -76,7 +75,7 @@ jobs:
           rm -rf ./.buildozer/android/platform/build-*/
 
       - name: Build APK
-        working-directory: ${{ github.workspace }} # หรือปรับ path ให้เป็น root project ที่มี buildozer.spec
+        working-directory: ${{ github.workspace }}
         env:
           ANDROIDSDK: ${{ env.ANDROIDSDK }}
           ANDROIDNDK: ${{ env.ANDROIDNDK }}
