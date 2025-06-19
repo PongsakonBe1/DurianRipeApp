@@ -53,9 +53,11 @@ jobs:
 
       - name: Symlink legacy tools
         run: |
-          mkdir -p "$ANDROIDSDK/tools/bin"
-          ln -sf "$ANDROIDSDK/cmdline-tools/latest/bin/sdkmanager" "$ANDROIDSDK/tools/bin/sdkmanager"
-          ln -sf "$ANDROIDSDK/cmdline-tools/latest/bin/avdmanager" "$ANDROIDSDK/tools/bin/avdmanager"
+          export ANDROIDSDK=${{ env.ANDROIDSDK }}
+          export PATH=$ANDROIDSDK/cmdline-tools/latest/bin:$PATH
+
+          yes | sdkmanager --licenses || true
+          sdkmanager "platform-tools" "platforms;android-33" "build-tools;33.0.2" "ndk;25.2.9519653
 
       - name: Clone python-for-android
         run: |
@@ -80,7 +82,7 @@ jobs:
           ANDROIDNDK: ${{ env.ANDROIDNDK }}
           ANDROIDAPI: ${{ env.ANDROIDAPI }}
           JAVA_HOME: ${{ env.JAVA_HOME }}
-          PATH: ${{ env.PATH }}
+          PATH: ${{ env.PATH }}:${{ env.JAVA_HOME }}/bin:${{ env.ANDROIDSDK }}/cmdline-tools/latest/bin
         run: |
           sudo apt-get install -y git
           buildozer android clean
