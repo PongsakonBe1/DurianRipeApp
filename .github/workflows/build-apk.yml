@@ -66,13 +66,19 @@ jobs:
       - name: Clean previous build files
         run: |
           rm -rf ./.buildozer
-          rm -rf $HOME/.buildozer
+          rm -rf $HOME/.buildozer/android/platform/build-*/
+          rm -rf $HOME/.buildozer/android/platform/build-*/
 
       - name: Build APK
+        env:
+          ANDROIDSDK: ${{ env.ANDROIDSDK }}
+          ANDROIDNDK: ${{ env.ANDROIDNDK }}
+          ANDROIDAPI: ${{ env.ANDROIDAPI }}
+          PATH: ${{ env.PATH }}
         run: |
           buildozer android clean
           buildozer android debug
-          
+
       - name: Upload APK artifact
         if: success()
         uses: actions/upload-artifact@v4
