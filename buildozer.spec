@@ -8,6 +8,7 @@ package.name = myapp
 
 # (str) Package domain (needed for android/ios packaging)
 package.domain = org.test
+
 # (str) Source code where the main.py live
 source.dir = .
 
@@ -20,14 +21,15 @@ requirements = python3==3.10,kivy,kivymd,numpy,tflite-runtime
 # (str) Application versioning (method 1)
 version = 0.1
 
-# นี่คือบรรทัดที่สำคัญมาก! ต้องมีและไม่มี '#' นำหน้า
+# Target platform
 target = android
-android.build_tools_version = 33.0.2
+
+# แก้ไข build_tools_version ให้ใช้เวอร์ชันที่มีจริง
+android.build_tools_version = 34.0.0
 
 # (str) Application versioning (method 2)
 # version.regex = __version__ = ['"](.*)['"]
 # version.filename = %(source.dir)s/main.py
-
 
 # (str) Custom source folders for requirements
 # Sets custom source for any requirements with recipes
@@ -91,16 +93,16 @@ fullscreen = 0
 #android.features = android.hardware.usb.host
 
 # (int) Target Android API, should be as high as possible.
-android.api = 33
+android.api = 34
 
 # (int) Minimum API your APK / AAB will support.
 android.minapi = 21
 
-# (int) Android SDK version to use
-android.sdk = 23
+# (int) Android SDK version to use - อัปเดตเป็นเวอร์ชันใหม่
+android.sdk = 34
 
-# (str) Android NDK version to use
-android.ndk = 23b
+# (str) Android NDK version to use - อัปเดตเป็นเวอร์ชันใหม่
+android.ndk = 25b
 
 # (int) Android NDK API to use. This is the minimum API your app will support, it should usually match android.minapi.
 android.ndk_api = 21
@@ -122,11 +124,8 @@ android.sdk_path =
 # when an update is due and you just want to test/build your package
 # android.skip_update = False
 
-# (bool) If True, then automatically accept SDK license
-# agreements. This is intended for automation only. If set to False,
-# the default, you will be shown the license when first running
-# buildozer.
-# android.accept_sdk_license = False
+# (bool) If True, then automatically accept SDK license - เพิ่มบรรทัดนี้
+android.accept_sdk_license = True
 
 # (str) Android entry point, default is ok for Kivy-based app
 #android.entrypoint = org.kivy.android.PythonActivity
@@ -341,8 +340,6 @@ android.allow_backup = True
 # (str) extra command line arguments to pass when invoking pythonforandroid.toolchain
 #p4a.extra_args =
 
-
-
 #
 # iOS specific
 #
@@ -388,7 +385,6 @@ ios.codesign.allowed = false
 # This option should be defined along with `app_url` and `display_image_url` options.
 #ios.manifest.full_size_image_url =
 
-
 [buildozer]
 
 # (int) Log level (0 = error only, 1 = info, 2 = debug (with command output))
@@ -421,7 +417,6 @@ warn_on_root = 1
 #data/audio/*.wav
 #data/images/original/*
 #
-
 
 #    -----------------------------------------------------------------------------
 #    Profiles
