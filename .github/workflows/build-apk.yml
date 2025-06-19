@@ -10,10 +10,10 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-      - name: Checkout repository
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Setup Python 3.10
+      - name: Setup Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
@@ -24,40 +24,37 @@ jobs:
           sudo apt-get install -y git openjdk-17-jdk unzip wget curl build-essential \
             libssl-dev libffi-dev python3-pip ant autoconf automake cmake libtool pkg-config
 
-      - name: Set JAVA_HOME and ANT environment variables
+      - name: Check git version
+        run: git --version
+
+      - name: Set environment variables for Java and Ant
         run: |
           echo "JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64" >> $GITHUB_ENV
-          echo "/usr/lib/jvm/java-17-openjdk-amd64/bin" >> $GITHUB_PATH
           echo "ANT_HOME=/usr/share/ant" >> $GITHUB_ENV
+          echo "/usr/lib/jvm/java-17-openjdk-amd64/bin" >> $GITHUB_PATH
           echo "/usr/share/ant/bin" >> $GITHUB_PATH
 
-      - name: Download and setup Android SDK commandline-tools
+      - name: Setup Android SDK and NDK
         run: |
           export ANDROIDSDK=$HOME/.buildozer/android/platform/android-sdk
           mkdir -p "$ANDROIDSDK/cmdline-tools"
           cd "$ANDROIDSDK/cmdline-tools"
           wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmd.zip
-          unzip -q cmd.zip && rm cmd.zip
+          unzip cmd.zip && rm cmd.zip
           mv cmdline-tools cmdline-tools-temp
           mv cmdline-tools-temp latest
           echo "ANDROIDSDK=$ANDROIDSDK" >> $GITHUB_ENV
+          echo "ANDROIDNDK=$ANDROIDSDK/ndk/25.2.9519653" >> $GITHUB_ENV
+          echo "ANDROIDAPI=33" >> $GITHUB_ENV
           echo "$ANDROIDSDK/cmdline-tools/latest/bin" >> $GITHUB_PATH
           echo "$ANDROIDSDK/platform-tools" >> $GITHUB_PATH
 
-      - name: Download and setup Android NDK r21e (Legacy)
+      - name: Accept licenses and install Android packages
         run: |
           export ANDROIDSDK=$HOME/.buildozer/android/platform/android-sdk
-          cd "$ANDROIDSDK"
-          wget https://dl.google.com/android/repository/android-ndk-r21e-linux-x86_64.zip -O android-ndk-r21e.zip
-          unzip -q android-ndk-r21e.zip && rm android-ndk-r21e.zip
-          echo "ANDROIDNDK=$ANDROIDSDK/android-ndk-r21e" >> $GITHUB_ENV
-          echo "LEGACY_NDK=$ANDROIDSDK/android-ndk-r21e" >> $GITHUB_ENV
-
-      - name: Accept Android SDK licenses and install platform tools
-        run: |
           yes | $ANDROIDSDK/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROIDSDK --licenses || true
           $ANDROIDSDK/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROIDSDK --install \
-            "platform-tools" "platforms;android-33" "build-tools;33.0.2"
+            "platform-tools" "platforms;android-33" "build-tools;33.0.2" "ndk;25.2.9519653"
 
       - name: Clone python-for-android
         run: |
@@ -69,11 +66,13 @@ jobs:
             cd python-for-android && git pull
           fi
 
-      - name: Install Python dependencies (buildozer, python-for-android)
+      - name: Install Python dependencies
         run: |
           python3 -m pip install --upgrade pip setuptools wheel
           python3 -m pip install buildozer==1.5.0 cython==0.29.33 colorama appdirs sh jinja2 six packaging toml
-          python3 -m pip install -e ./.buildozer/android/platform/python-for-android
+
+      - name: Install local python-for-android
+        run: python3 -m pip install -e ./.buildozer/android/platform/python-for-android
 
       - name: Clean previous builds
         run: rm -rf ./.buildozer/android/platform/build-* ./.buildozer/android/app
@@ -82,15 +81,13 @@ jobs:
         env:
           ANDROIDSDK: ${{ env.ANDROIDSDK }}
           ANDROIDNDK: ${{ env.ANDROIDNDK }}
-          ANDROIDAPI: 33
-          JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
-          LEGACY_NDK: ${{ env.LEGACY_NDK }}
-          PATH: ${{ env.PATH }}
+          ANDROIDAPI: ${{ env.ANDROIDAPI }}
+          JAVA_HOME: ${{ env.JAVA_HOME }}
         run: |
           buildozer android clean
           buildozer android debug
 
-      - name: Upload APK artifact
+      - name: Upload APK
         if: success()
         uses: actions/upload-artifact@v4
         with:
