@@ -21,11 +21,8 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Install dependencies (system)
+      - name: Install system dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install -y software-properties-common
-          sudo add-apt-repository universe
           sudo apt-get update
           sudo apt-get install -y \
             git \
@@ -37,14 +34,14 @@ jobs:
             libssl-dev \
             libffi-dev \
             python3-pip \
-            python3-venv \
-            python3-distutils
+            python3-venv
 
-      - name: Install Buildozer and dependencies
+      - name: Install distutils and Python packages
         run: |
+          python3 -m ensurepip --upgrade
           python3 -m pip install --upgrade pip setuptools cython buildozer
 
-      - name: Set ANDROID SDK environment variables
+      - name: Set up Android SDK
         run: |
           mkdir -p $HOME/android-sdk/cmdline-tools
           cd $HOME/android-sdk/cmdline-tools
@@ -61,7 +58,7 @@ jobs:
           yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_SDK_ROOT "platform-tools" "platforms;android-33" "build-tools;33.0.2" "ndk;25.2.9519653"
         shell: bash
 
-      - name: Set environment variables for Buildozer
+      - name: Export environment variables for Buildozer
         run: |
           echo "ANDROIDSDK=$HOME/android-sdk" >> $GITHUB_ENV
           echo "ANDROIDNDK=$HOME/android-sdk/ndk/25.2.9519653" >> $GITHUB_ENV
