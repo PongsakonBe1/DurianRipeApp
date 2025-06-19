@@ -19,13 +19,12 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y \
-            git openjdk-11-jdk unzip wget curl build-essential libssl-dev libffi-dev python3-pip
+          sudo apt-get install -y git openjdk-11-jdk unzip wget curl build-essential libssl-dev libffi-dev python3-pip
 
-      - name: Clean Android SDK folder and buildozer cache
+      - name: Clean buildozer and Android SDK cache
         run: |
-          rm -rf $HOME/android-sdk
           rm -rf ./.buildozer
+          rm -rf $HOME/android-sdk
 
       - name: Install Buildozer and Cython
         run: |
