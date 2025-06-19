@@ -42,7 +42,7 @@ jobs:
       - name: Install Android SDK packages
         run: $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/android-sdk "platform-tools" "platforms;android-33" "build-tools;36.0.0" "ndk;25.2.9519653"
 
-      - name: Check build-tools folder
+      - name: Verify build-tools installation
         run: ls -l $HOME/android-sdk/build-tools
 
       - name: Export environment variables
@@ -52,5 +52,5 @@ jobs:
           echo "JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64" >> $GITHUB_ENV
           echo "PATH=$PATH:$HOME/.local/bin" >> $GITHUB_ENV
 
-      - name: Build APK
+      - name: Build APK with Buildozer
         run: buildozer android debug
