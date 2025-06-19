@@ -27,7 +27,7 @@ jobs:
         run: |
           sudo ln -sf /lib/x86_64-linux-gnu/libtinfo.so.6 /lib/x86_64-linux-gnu/libtinfo.so.5
 
-      - name: Set JAVA_HOME
+      - name: Set JAVA_HOME and update PATH
         run: |
           echo "JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64" >> $GITHUB_ENV
           echo "PATH=$PATH:/usr/lib/jvm/java-17-openjdk-amd64/bin" >> $GITHUB_ENV
@@ -43,13 +43,9 @@ jobs:
           python -m pip install buildozer==1.5.0
           python -m pip install cython==0.29.33
           python -m pip install colorama appdirs sh jinja2 six
-
-      # **เพิ่มขั้นตอนนี้เพื่อติดตั้ง python-for-android เวอร์ชันที่มีอยู่จริงและเข้ากันกับ buildozer**
-      - name: Install python-for-android
-        run: |
           python -m pip install python-for-android==2023.9.16
 
-      - name: Setup Android SDK
+      - name: Setup Android SDK Commandline Tools
         run: |
           mkdir -p $HOME/.buildozer/android/platform
           cd $HOME/.buildozer/android/platform
@@ -69,9 +65,10 @@ jobs:
         run: |
           yes | $HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/.buildozer/android/platform/android-sdk --licenses
 
-      - name: Install Android SDK components
+      - name: Install required Android SDK components
         run: |
-          $HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/.buildozer/android/platform/android-sdk "platform-tools" "platforms;android-33" "build-tools;33.0.2" "ndk;23.2.8568313"
+          $HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/.buildozer/android/platform/android-sdk \
+          "platform-tools" "platforms;android-33" "build-tools;33.0.2" "ndk;23.2.8568313"
 
           echo "ANDROIDNDK=$HOME/.buildozer/android/platform/android-sdk/ndk/23.2.8568313" >> $GITHUB_ENV
           echo "ANDROIDAPI=33" >> $GITHUB_ENV
@@ -91,7 +88,7 @@ jobs:
           buildozer android clean
           buildozer android debug
 
-      - name: Upload APK
+      - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         if: success()
         with:
@@ -99,7 +96,7 @@ jobs:
           path: bin/*.apk
           retention-days: 30
 
-      - name: Upload build logs
+      - name: Upload build logs on failure
         uses: actions/upload-artifact@v4
         if: failure()
         with:
