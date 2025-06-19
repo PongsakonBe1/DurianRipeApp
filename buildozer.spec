@@ -110,7 +110,7 @@ android.legacy_ndk = True
 
 
 # (str) Android NDK directory (if empty, it will be automatically downloaded.)
-android.ndk_path = /home/runner/Android/Sdk/ndk/$ANDROID_NDK_VERSION
+android.ndk_path = /home/runner/work/DurianRipeApp/DurianRipeApp/.buildozer/android/platform/android-sdk/ndk/android-ndk-r25.2.9519653
 
 # (str) Android SDK directory (if empty, it will be automatically downloaded.)
 android.sdk_path = /home/runner/Android/Sdk
