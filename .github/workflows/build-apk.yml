@@ -53,6 +53,10 @@ jobs:
 
           mv temp/cmdline-tools $HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest
 
+      - name: Add SDK tools to PATH
+        run: |
+          echo "$HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin" >> $GITHUB_PATH
+
       - name: Accept Android SDK licenses
         run: yes | sdkmanager --licenses
 
