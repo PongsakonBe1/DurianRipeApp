@@ -110,7 +110,7 @@ android.legacy_ndk = True
 
 
 # (str) Android NDK directory (if empty, it will be automatically downloaded.)
-android.ndk_path = $HOME/.buildozer/android/platform/android-sdk/ndk/25.2.9519653
+android.ndk_path = /home/runner/.buildozer/android/platform/android-sdk/ndk/25.2.9519653
 
 # (str) Android SDK directory (if empty, it will be automatically downloaded.)
 android.sdk_path = $HOME/.buildozer/android/platform/android-sdk

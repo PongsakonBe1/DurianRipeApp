@@ -27,9 +27,9 @@ jobs:
       - name: Set Environment Variables
         run: |
           echo "JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64" >> $GITHUB_ENV
-          echo "PATH=/usr/lib/jvm/java-17-openjdk-amd64/bin:$PATH" >> $GITHUB_ENV
+          echo "/usr/lib/jvm/java-17-openjdk-amd64/bin" >> $GITHUB_PATH
           echo "ANT_HOME=/usr/share/ant" >> $GITHUB_ENV
-          echo "PATH=/usr/share/ant/bin:$PATH" >> $GITHUB_ENV
+          echo "/usr/share/ant/bin" >> $GITHUB_PATH
 
       - name: Setup Android SDK and NDK
         run: |
@@ -40,7 +40,6 @@ jobs:
           unzip cmd.zip && rm cmd.zip
           mv cmdline-tools cmdline-tools-temp
           mv cmdline-tools-temp latest
-
           echo "ANDROIDSDK=$ANDROIDSDK" >> $GITHUB_ENV
           echo "ANDROIDNDK=$ANDROIDSDK/ndk/25.2.9519653" >> $GITHUB_ENV
           echo "ANDROIDAPI=33" >> $GITHUB_ENV
@@ -49,8 +48,9 @@ jobs:
 
       - name: Accept Licenses and Install Android Packages
         run: |
-          sdkmanager --sdk_root=$ANDROIDSDK --licenses || true
-          sdkmanager --sdk_root=$ANDROIDSDK --install \
+          export ANDROIDSDK=$HOME/.buildozer/android/platform/android-sdk
+          yes | $ANDROIDSDK/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROIDSDK --licenses || true
+          $ANDROIDSDK/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROIDSDK --install \
             "platform-tools" "platforms;android-33" "build-tools;33.0.2" "ndk;25.2.9519653"
 
       - name: Clone python-for-android
@@ -80,7 +80,6 @@ jobs:
           ANDROIDNDK: ${{ env.ANDROIDNDK }}
           ANDROIDAPI: ${{ env.ANDROIDAPI }}
           JAVA_HOME: ${{ env.JAVA_HOME }}
-          PATH: /usr/bin:${{ env.PATH }}:${{ env.JAVA_HOME }}/bin:${{ env.ANDROIDSDK }}/cmdline-tools/latest/bin
         run: |
           buildozer android clean
           buildozer android debug
