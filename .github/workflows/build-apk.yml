@@ -4,55 +4,69 @@ on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
+      - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Install dependencies
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies (system)
         run: |
           sudo apt-get update
-          sudo apt-get install -y python3-pip python3-setuptools python3-virtualenv unzip openjdk-11-jdk wget
+          sudo apt-get install -y \
+            python3-distutils \
+            git \
+            openjdk-11-jdk \
+            unzip \
+            wget \
+            curl \
+            build-essential \
+            libssl-dev \
+            libffi-dev \
+            python3-pip
 
-      - name: Setup Python environment
+      - name: Install Buildozer and dependencies
         run: |
-          python3 -m virtualenv venv
-          source venv/bin/activate
-          pip install --upgrade pip
-          pip install buildozer
+          python -m pip install --upgrade pip
+          python -m pip install buildozer
+          python -m pip install cython
 
-      - name: Download Android SDK Command Line Tools
+      - name: Set ANDROID SDK environment variables
         run: |
           mkdir -p $HOME/android-sdk/cmdline-tools
           cd $HOME/android-sdk/cmdline-tools
-          wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip
-          unzip -o cmdline-tools.zip
-          mv cmdline-tools latest
+          # Download latest cmdline tools
+          wget https://dl.google.com/android/repository/commandlinetools-linux-8512546_latest.zip -O cmdline-tools.zip
+          unzip cmdline-tools.zip
           rm cmdline-tools.zip
+          mv cmdline-tools latest
+        shell: bash
 
-      - name: Setup Android SDK environment variables
+      - name: Configure Android SDK
+        env:
+          ANDROID_SDK_ROOT: ${{ env.HOME }}/android-sdk
         run: |
-          echo "ANDROID_SDK_ROOT=$HOME/android-sdk" >> $GITHUB_ENV
-          echo "ANDROID_HOME=$HOME/android-sdk" >> $GITHUB_ENV
-          echo "PATH=$HOME/android-sdk/cmdline-tools/latest/bin:$PATH" >> $GITHUB_ENV
+          yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_SDK_ROOT "platform-tools" "platforms;android-33" "build-tools;33.0.2" "ndk;25.2.9519653"
+        shell: bash
 
-      - name: Install Android SDK packages
+      - name: Set environment variables for Buildozer
         run: |
-          yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/android-sdk --licenses
-          $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/android-sdk "platform-tools" "platforms;android-33" "build-tools;36.0.0" "ndk;27.2.12479018"
-
-      - name: Create symlinks for sdkmanager (fix Buildozer path issues)
-        run: |
-          mkdir -p $HOME/.buildozer/android/platform/android-sdk/tools/bin
-          ln -s $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager $HOME/.buildozer/android/platform/android-sdk/tools/bin/sdkmanager
-          mkdir -p $HOME/.buildozer/android/platform/android-sdk/build-tools
-          ln -s $HOME/android-sdk/build-tools $HOME/.buildozer/android/platform/android-sdk/build-tools
+          echo "ANDROIDSDK=$HOME/android-sdk" >> $GITHUB_ENV
+          echo "ANDROIDNDK=$HOME/android-sdk/ndk/25.2.9519653" >> $GITHUB_ENV
+          echo "PATH=$PATH:$HOME/.local/bin" >> $GITHUB_ENV
+          echo "JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64" >> $GITHUB_ENV
 
       - name: Build APK with Buildozer
         run: |
-          source venv/bin/activate
           buildozer android debug
