@@ -28,7 +28,12 @@ jobs:
       - name: Set JAVA_HOME
         run: |
           echo "JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64" >> $GITHUB_ENV
-          echo "PATH=$PATH:/usr/lib/jvm/java-17-openjdk-amd64/bin" >> $GITHUB_ENV
+          echo "PATH=/usr/lib/jvm/java-17-openjdk-amd64/bin:$PATH" >> $GITHUB_ENV
+
+      - name: Check internet connectivity
+        run: |
+          ping -c 3 google.com
+          curl -I https://dl.google.com
 
       - name: Setup Android SDK & NDK
         run: |
