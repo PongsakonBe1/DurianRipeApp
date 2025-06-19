@@ -17,8 +17,7 @@ jobs:
       JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Install system dependencies
         run: |
@@ -26,7 +25,7 @@ jobs:
           sudo apt-get install -y git openjdk-17-jdk unzip wget curl build-essential \
             python3-pip autoconf automake libtool pkg-config cmake ant
 
-      - name: Download and setup Android SDK cmdline-tools
+      - name: Setup Android SDK cmdline-tools
         run: |
           mkdir -p $ANDROID_SDK_ROOT/cmdline-tools
           cd $ANDROID_SDK_ROOT/cmdline-tools
@@ -35,7 +34,7 @@ jobs:
           rm cmdline-tools.zip
           mv cmdline-tools latest
 
-      - name: Setup Android environment variables
+      - name: Setup environment variables
         run: |
           echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
           echo "JAVA_HOME=$JAVA_HOME" >> $GITHUB_ENV
@@ -47,31 +46,31 @@ jobs:
           yes | sdkmanager --sdk_root=$ANDROID_SDK_ROOT --licenses
           sdkmanager --sdk_root=$ANDROID_SDK_ROOT "platform-tools" "platforms;android-$ANDROID_API_LEVEL" "build-tools;33.0.2" "ndk;$ANDROID_NDK_VERSION"
 
-      - name: Upgrade pip and fix setuptools version (sh module issue workaround)
+      - name: Upgrade pip and fix setuptools version
         run: |
           python3 -m pip install --upgrade pip
           python3 -m pip install setuptools==65.5.0
 
-      - name: Install sh module pinned version
+      - name: Install Python dependencies
         run: |
           python3 -m pip install sh==1.14.3
-
-      - name: Install buildozer, cython, python-for-android pinned versions
-        run: |
           python3 -m pip install buildozer==1.5.0 cython==0.29.33 python-for-android==2024.1.21
 
       - name: Clean previous builds and cache
-        run: |
-          rm -rf ./.buildozer
+        run: rm -rf ./.buildozer
 
-      - name: Build APK with Buildozer
+      - name: Clone python-for-android repo (workaround)
+        run: |
+          mkdir -p .buildozer/android/platform
+          git clone https://github.com/kivy/python-for-android.git .buildozer/android/platform/python-for-android
+
+      - name: Build APK
         env:
           ANDROIDSDK: $ANDROID_SDK_ROOT
           ANDROIDNDK: $ANDROID_SDK_ROOT/ndk/$ANDROID_NDK_VERSION
           ANDROIDAPI: $ANDROID_API_LEVEL
           JAVA_HOME: $JAVA_HOME
-        run: |
-          buildozer android debug
+        run: buildozer android debug
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
