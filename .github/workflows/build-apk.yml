@@ -7,17 +7,13 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: bash
-
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
-
+      
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: 3.10
 
       - name: Install system dependencies
         run: |
@@ -28,34 +24,24 @@ jobs:
       - name: Set JAVA_HOME
         run: |
           echo "JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64" >> $GITHUB_ENV
-          echo "PATH=/usr/lib/jvm/java-17-openjdk-amd64/bin:$PATH" >> $GITHUB_ENV
-
-      - name: Check internet connectivity
-        run: |
-          ping -c 3 google.com
-          curl -I https://dl.google.com
+          echo "PATH=$PATH:/usr/lib/jvm/java-17-openjdk-amd64/bin" >> $GITHUB_ENV
 
       - name: Setup Android SDK & NDK
         run: |
-          export SDK=$HOME/.buildozer/android/platform/android-sdk
+          SDK="$HOME/.buildozer/android/platform/android-sdk"
           mkdir -p "$SDK/cmdline-tools"
           cd "$SDK/cmdline-tools"
           wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmd.zip
-          unzip cmd.zip && rm cmd.zip
+          unzip -q cmd.zip && rm cmd.zip
           mv cmdline-tools cmdline-tools-temp
           mv cmdline-tools-temp latest
-
+          export PATH="$SDK/cmdline-tools/latest/bin:$SDK/platform-tools:$PATH"
+          yes | sdkmanager --licenses || true
+          sdkmanager --sdk_root="$SDK" "platform-tools" "platforms;android-33" "build-tools;33.0.2" "ndk;25.2.9519653"
           echo "ANDROIDSDK=$SDK" >> $GITHUB_ENV
           echo "ANDROIDNDK=$SDK/ndk/25.2.9519653" >> $GITHUB_ENV
           echo "ANDROIDAPI=33" >> $GITHUB_ENV
           echo "PATH=$SDK/cmdline-tools/latest/bin:$SDK/platform-tools:$PATH" >> $GITHUB_ENV
-
-      - name: Accept licenses and install Android SDK packages
-        run: |
-          export ANDROIDSDK=$HOME/.buildozer/android/platform/android-sdk
-          export PATH=$ANDROIDSDK/cmdline-tools/latest/bin:$PATH
-          yes | sdkmanager --licenses || true
-          sdkmanager --sdk_root=$ANDROIDSDK --install "platform-tools" "platforms;android-33" "build-tools;33.0.2" "ndk;25.2.9519653"
 
       - name: Clone python-for-android
         run: |
@@ -70,13 +56,13 @@ jobs:
 
       - name: Install Python dependencies
         run: |
-          pip install --upgrade pip setuptools wheel
-          pip install buildozer==1.5.0 cython==0.29.33 colorama appdirs sh jinja2 six packaging toml
+          python3 -m pip install --upgrade pip setuptools wheel
+          python3 -m pip install buildozer==1.5.0 cython==0.29.33 colorama appdirs sh jinja2 six packaging toml
 
-      - name: Install local python-for-android
-        run: pip install -e ./.buildozer/android/platform/python-for-android
+      - name: Install python-for-android locally
+        run: python3 -m pip install -e ./.buildozer/android/platform/python-for-android
 
-      - name: Clean previous build files
+      - name: Clean old builds
         run: rm -rf ./.buildozer/android/platform/build-* ./.buildozer/android/app
 
       - name: Build APK
@@ -94,7 +80,7 @@ jobs:
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: durian-apk
+          name: android-apk
           path: bin/*.apk
 
       - name: Upload build logs on failure
