@@ -36,18 +36,22 @@ jobs:
           wget https://dl.google.com/android/repository/commandlinetools-linux-8512546_latest.zip -O cmdline-tools.zip
           unzip cmdline-tools.zip
           rm cmdline-tools.zip
-          # ตรวจสอบชื่อโฟลเดอร์ที่ unzip ได้
-          ls -l
-          # ถ้า unzip ได้โฟลเดอร์ cmdline-tools ให้ย้ายเป็น latest
           mv cmdline-tools latest
 
-      - name: Accept Android SDK licenses
+      - name: Accept licenses for platform-tools
         run: yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/android-sdk --licenses
 
-      - name: Install Android SDK packages
-        run: |
-          yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/android-sdk \
-            "platform-tools" "platforms;android-33" "build-tools;36.0.0" "ndk;25.2.9519653"
+      - name: Install platform-tools
+        run: yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/android-sdk "platform-tools"
+
+      - name: Accept licenses for build-tools
+        run: yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/android-sdk --licenses
+
+      - name: Install build-tools 33.0.2
+        run: yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/android-sdk "build-tools;33.0.2"
+
+      - name: Install platforms and ndk
+        run: yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/android-sdk "platforms;android-33" "ndk;25.2.9519653"
 
       - name: Check build-tools folder
         run: ls -l $HOME/android-sdk/build-tools
@@ -60,5 +64,4 @@ jobs:
           echo "PATH=$PATH:$HOME/.local/bin" >> $GITHUB_ENV
 
       - name: Build APK with Buildozer
-        run: |
-          buildozer android debug
+        run: buildozer android debug
