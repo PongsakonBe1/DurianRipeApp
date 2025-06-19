@@ -11,36 +11,20 @@ jobs:
     runs-on: ubuntu-22.04
 
     env:
-      # ตั้งค่า environment variables สำหรับ Android SDK/NDK และ JDK
       ANDROID_SDK_ROOT: /home/runner/Android/Sdk
-      ANDROID_NDK_VERSION: "21.4.7075529"  # NDK r21e (Buildozer แนะนำ)
-      ANDROID_API_LEVEL: "33"              # Android API Level
+      ANDROID_NDK_VERSION: "21.4.7075529"  # NDK r21e (legacy gcc support)
+      ANDROID_API_LEVEL: "33"
       JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        # ดึง source code ของโปรเจกต์มา
 
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y \
-            git \
-            openjdk-17-jdk \
-            unzip \
-            wget \
-            curl \
-            build-essential \
-            python3-pip \
-            autoconf \
-            automake \
-            libtool \
-            pkg-config \
-            cmake \
-            ant
-        # ติดตั้ง dependencies สำหรับ build environment
-        # โดยเฉพาะ git จำเป็นมากเพราะ Buildozer ใช้ git ดึงโมดูลและ dependencies
+          sudo apt-get install -y git openjdk-17-jdk unzip wget curl build-essential \
+            python3-pip autoconf automake libtool pkg-config cmake ant
 
       - name: Download and setup Android SDK cmdline-tools
         run: |
@@ -50,7 +34,6 @@ jobs:
           unzip cmdline-tools.zip
           rm cmdline-tools.zip
           mv cmdline-tools latest
-        # ดาวน์โหลด Android SDK command line tools เวอร์ชันล่าสุดมาไว้ที่ sdk/cmdline-tools/latest
 
       - name: Setup Android environment variables
         run: |
@@ -58,29 +41,23 @@ jobs:
           echo "JAVA_HOME=$JAVA_HOME" >> $GITHUB_ENV
           echo "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin" >> $GITHUB_PATH
           echo "$ANDROID_SDK_ROOT/platform-tools" >> $GITHUB_PATH
-        # เซ็ต environment variables ให้พร้อมใช้ในขั้นตอนถัดไป
 
       - name: Accept licenses and install SDK packages
         run: |
           yes | sdkmanager --sdk_root=$ANDROID_SDK_ROOT --licenses
-          sdkmanager --sdk_root=$ANDROID_SDK_ROOT \
-            "platform-tools" \
-            "platforms;android-$ANDROID_API_LEVEL" \
-            "build-tools;33.0.2" \
-            "ndk;$ANDROID_NDK_VERSION"
-        # ติดตั้งเครื่องมือจำเป็นของ Android SDK และ NDK ที่ต้องใช้สำหรับ build
-        # และยอมรับ license ทั้งหมด (บังคับสำหรับ sdkmanager)
+          sdkmanager --sdk_root=$ANDROID_SDK_ROOT "platform-tools" "platforms;android-$ANDROID_API_LEVEL" "build-tools;33.0.2" "ndk;$ANDROID_NDK_VERSION"
+
+      - name: Upgrade pip, setuptools, wheel
+        run: |
+          python3 -m pip install --upgrade pip setuptools wheel
 
       - name: Install Python dependencies
         run: |
-          python3 -m pip install --upgrade pip setuptools wheel
           python3 -m pip install buildozer==1.5.0 cython==0.29.33
-        # ติดตั้ง Buildozer และ Cython เวอร์ชันที่เสถียร (ถ้าอยากอัพเดตเวอร์ชัน ก็แก้ได้)
 
-      - name: Install python-for-android
+      - name: Install python-for-android (latest)
         run: |
           python3 -m pip install python-for-android
-        # ติดตั้ง p4a (python-for-android) ล่าสุด (Buildozer ใช้เรียก p4a)
 
       - name: Build APK with Buildozer
         env:
@@ -91,12 +68,9 @@ jobs:
         run: |
           buildozer android clean
           buildozer android debug
-        # คำสั่ง build APK แบบ clean ก่อน build ใหม่
-        # แนะนำถ้าขี้เกียจ clean ให้ลบบรรทัด clean ออกไปได้
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: android-apk
           path: bin/*.apk
-        # อัปโหลด APK ที่ build เสร็จแล้วขึ้น GitHub Actions artifacts
