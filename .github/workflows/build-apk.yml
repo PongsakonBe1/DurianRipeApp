@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-  workflow_dispatch:  # ให้รันด้วยตนเองได้
+  workflow_dispatch:  # รันเองได้ด้วย
 
 jobs:
   build:
@@ -32,8 +32,8 @@ jobs:
 
       - name: Set JAVA_HOME environment variable
         run: |
+          echo "/usr/lib/jvm/java-11-openjdk-amd64/bin" >> $GITHUB_PATH
           echo "JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64" >> $GITHUB_ENV
-          echo "PATH=$PATH:/usr/lib/jvm/java-11-openjdk-amd64/bin" >> $GITHUB_ENV
 
       - name: Clean previous buildozer caches
         run: |
@@ -56,25 +56,24 @@ jobs:
           mkdir -p android-sdk/cmdline-tools
           mv cmdline-tools android-sdk/cmdline-tools/latest
 
+      - name: Add Android SDK tools to PATH and set environment variables
+        run: |
+          echo "$HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin" >> $GITHUB_PATH
+          echo "$HOME/.buildozer/android/platform/android-sdk/platform-tools" >> $GITHUB_PATH
           echo "ANDROIDSDK=$HOME/.buildozer/android/platform/android-sdk" >> $GITHUB_ENV
-          echo "PATH=$PATH:$HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin" >> $GITHUB_ENV
-          echo "PATH=$PATH:$HOME/.buildozer/android/platform/android-sdk/platform-tools" >> $GITHUB_ENV
+          echo "ANDROIDNDK=$HOME/.buildozer/android/platform/android-sdk/ndk/23.2.8568313" >> $GITHUB_ENV
+          echo "ANDROIDAPI=33" >> $GITHUB_ENV
 
       - name: Accept Android SDK licenses
         run: |
-          cd $HOME/.buildozer/android/platform/android-sdk
-          yes | ./cmdline-tools/latest/bin/sdkmanager --licenses
+          yes | $HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager --licenses
 
       - name: Install Android SDK components
         run: |
-          cd $HOME/.buildozer/android/platform/android-sdk
-          ./cmdline-tools/latest/bin/sdkmanager "platform-tools"
-          ./cmdline-tools/latest/bin/sdkmanager "platforms;android-33"
-          ./cmdline-tools/latest/bin/sdkmanager "build-tools;33.0.2"
-          ./cmdline-tools/latest/bin/sdkmanager "ndk;23.2.8568313"
-
-          echo "ANDROIDNDK=$HOME/.buildozer/android/platform/android-sdk/ndk/23.2.8568313" >> $GITHUB_ENV
-          echo "ANDROIDAPI=33" >> $GITHUB_ENV
+          $HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager "platform-tools"
+          $HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager "platforms;android-33"
+          $HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager "build-tools;33.0.2"
+          $HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager "ndk;23.2.8568313"
 
       - name: Verify environment setup
         run: |
@@ -90,7 +89,7 @@ jobs:
         run: |
           buildozer init || true
           buildozer android clean || true
-          buildozer -v android debug
+          buildozer -v android debug --sdk-path $HOME/.buildozer/android/platform/android-sdk
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
