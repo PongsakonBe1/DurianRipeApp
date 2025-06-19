@@ -45,11 +45,17 @@ jobs:
           echo "ANDROIDAPI=33" >> $GITHUB_ENV
           echo "PATH=$SDK/cmdline-tools/latest/bin:$SDK/platform-tools:$PATH" >> $GITHUB_ENV
 
-      - name: Accept SDK licenses and install components
+      - name: Accept licenses and install Android SDK packages
         run: |
-          source $GITHUB_ENV
+          export ANDROIDSDK=${{ env.ANDROIDSDK }}
+          export PATH=$ANDROIDSDK/cmdline-tools/latest/bin:$PATH
+        
           yes | sdkmanager --licenses || true
-          sdkmanager "platform-tools" "platforms;android-33" "build-tools;33.0.2" "ndk;25.2.9519653"
+          sdkmanager \
+              'platform-tools' \
+              'platforms;android-33' \
+              'build-tools;33.0.2' \
+              'ndk;25'
 
       - name: Symlink legacy tools
         run: |
