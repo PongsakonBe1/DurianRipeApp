@@ -31,10 +31,10 @@ jobs:
           mkdir -p $ANDROID_SDK_ROOT/cmdline-tools
           cd $ANDROID_SDK_ROOT/cmdline-tools
           wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip
-          unzip -q cmdline-tools.zip -d latest_tmp
-          mkdir -p latest
-          mv latest_tmp/cmdline-tools latest/
-          rm -rf latest_tmp cmdline-tools.zip
+          unzip -q cmdline-tools.zip
+          rm -rf latest
+          mv cmdline-tools latest
+          rm cmdline-tools.zip
 
       - name: Setup environment variables
         run: |
@@ -42,6 +42,12 @@ jobs:
           echo "JAVA_HOME=$JAVA_HOME" >> $GITHUB_ENV
           echo "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin" >> $GITHUB_PATH
           echo "$ANDROID_SDK_ROOT/platform-tools" >> $GITHUB_PATH
+
+      - name: List SDK cmdline-tools folder
+        run: ls -l $ANDROID_SDK_ROOT/cmdline-tools/latest/bin
+
+      - name: Show PATH
+        run: echo $PATH
 
       - name: Accept licenses and install SDK packages
         run: |
