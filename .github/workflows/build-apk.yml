@@ -46,9 +46,15 @@ jobs:
           echo "$ANDROIDSDK/cmdline-tools/latest/bin" >> $GITHUB_PATH
           echo "$ANDROIDSDK/platform-tools" >> $GITHUB_PATH
 
+      - name: Fix Android SDK layout for Buildozer
+        run: |
+          SDK=$HOME/.buildozer/android/platform/android-sdk
+          mkdir -p $SDK/tools/bin
+          ln -sf $SDK/cmdline-tools/latest/bin/sdkmanager $SDK/tools/bin/sdkmanager
+
       - name: Accept Licenses and Install Android Packages
         run: |
-          ANDROIDSDK=$HOME/.buildozer/android/platform/android-sdk
+          export ANDROIDSDK=$HOME/.buildozer/android/platform/android-sdk
           yes | $ANDROIDSDK/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROIDSDK --licenses || true
           $ANDROIDSDK/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROIDSDK --install \
             "platform-tools" "platforms;android-33" "build-tools;33.0.2" "ndk;25.2.9519653"
@@ -71,13 +77,6 @@ jobs:
       - name: Install Local python-for-android
         run: python3 -m pip install -e ./.buildozer/android/platform/python-for-android
 
-      - name: Modify buildozer.spec with SDK/NDK paths
-        run: |
-          sed -i "/^android.sdk_path =/c\android.sdk_path = /home/runner/.buildozer/android/platform/android-sdk" buildozer.spec
-          sed -i "/^android.ndk_path =/c\android.ndk_path = /home/runner/.buildozer/android/platform/android-sdk/ndk/25.2.9519653" buildozer.spec
-          grep -q "^android.sdk_path =" buildozer.spec || echo "android.sdk_path = /home/runner/.buildozer/android/platform/android-sdk" >> buildozer.spec
-          grep -q "^android.ndk_path =" buildozer.spec || echo "android.ndk_path = /home/runner/.buildozer/android/platform/android-sdk/ndk/25.2.9519653" >> buildozer.spec
-
       - name: Clean Previous Builds
         run: rm -rf ./.buildozer/android/platform/build-* ./.buildozer/android/app
 
@@ -87,6 +86,8 @@ jobs:
           ANDROIDNDK: ${{ env.ANDROIDNDK }}
           ANDROIDAPI: ${{ env.ANDROIDAPI }}
           JAVA_HOME: ${{ env.JAVA_HOME }}
+          ANT_HOME: /usr/share/ant
+          PATH: /usr/bin:${{ env.PATH }}:${{ env.JAVA_HOME }}/bin:${{ env.ANDROIDSDK }}/cmdline-tools/latest/bin:/usr/share/ant/bin
         run: |
           buildozer android clean
           buildozer android debug
