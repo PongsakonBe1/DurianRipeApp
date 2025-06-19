@@ -10,9 +10,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-      - uses: actions/setup-python@v4
+      - name: Setup Python 3.10
+        uses: actions/setup-python@v4
         with:
           python-version: '3.10'
 
@@ -34,17 +36,20 @@ jobs:
           wget https://dl.google.com/android/repository/commandlinetools-linux-8512546_latest.zip -O cmdline-tools.zip
           unzip cmdline-tools.zip
           rm cmdline-tools.zip
+          # ตรวจสอบชื่อโฟลเดอร์ที่ unzip ได้
+          ls -l
+          # ถ้า unzip ได้โฟลเดอร์ cmdline-tools ให้ย้ายเป็น latest
           mv cmdline-tools latest
 
-          - name: Accept Android SDK licenses
-          run: yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/android-sdk --licenses
-  
+      - name: Accept Android SDK licenses
+        run: yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/android-sdk --licenses
+
       - name: Install Android SDK packages
         run: |
-          $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/android-sdk "platform-tools" "platforms;android-33" "build-tools;33.0.2" "ndk;25.2.9519653" || true
-          yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/android-sdk --licenses
-  
-      - name: Verify build-tools installation
+          $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/android-sdk \
+            "platform-tools" "platforms;android-33" "build-tools;36.0.0" "ndk;25.2.9519653"
+
+      - name: Check build-tools folder
         run: ls -l $HOME/android-sdk/build-tools
 
       - name: Export environment variables
@@ -55,4 +60,5 @@ jobs:
           echo "PATH=$PATH:$HOME/.local/bin" >> $GITHUB_ENV
 
       - name: Build APK with Buildozer
-        run: buildozer android debug
+        run: |
+          buildozer android debug
