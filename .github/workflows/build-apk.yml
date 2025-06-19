@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-  workflow_dispatch:  # allow manual run
+  workflow_dispatch:
 
 jobs:
   build:
@@ -28,7 +28,7 @@ jobs:
             libncurses5-dev libncursesw5-dev libreadline-dev \
             libsqlite3-dev liblzma-dev libbz2-dev libtinfo5
 
-      - name: Fix JAVA and PATH
+      - name: Set JAVA and PATH
         run: |
           echo "JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64" >> $GITHUB_ENV
           echo "$JAVA_HOME/bin" >> $GITHUB_PATH
@@ -38,21 +38,18 @@ jobs:
           python -m pip install --upgrade pip setuptools wheel
           python -m pip install buildozer==1.5.0 cython==0.29.33
 
-      - name: Setup Android SDK
+      - name: Setup Android SDK (fixed)
         run: |
-          mkdir -p $HOME/.buildozer/android/platform
-          cd $HOME/.buildozer/android/platform
+          mkdir -p $HOME/.buildozer/android/platform/android-sdk/cmdline-tools
+          cd $HOME/.buildozer/android/platform/android-sdk/cmdline-tools
 
           wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O tools.zip
-          unzip tools.zip -d cmdline-tools
+          unzip tools.zip -d temp
           rm tools.zip
-          mv cmdline-tools $HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest
 
-      - name: Set environment variables
-        run: |
+          mv temp/cmdline-tools latest
+
           echo "ANDROIDSDK=$HOME/.buildozer/android/platform/android-sdk" >> $GITHUB_ENV
-          echo "ANDROIDNDK=$HOME/.buildozer/android/platform/android-sdk/ndk/23.2.8568313" >> $GITHUB_ENV
-          echo "ANDROIDAPI=33" >> $GITHUB_ENV
           echo "$HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin" >> $GITHUB_PATH
           echo "$HOME/.buildozer/android/platform/android-sdk/platform-tools" >> $GITHUB_PATH
 
@@ -60,7 +57,7 @@ jobs:
         run: |
           yes | $HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager --licenses
 
-      - name: Install SDK packages (build-tools 33.0.2 only)
+      - name: Install SDK packages (safe)
         run: |
           sdkmanager --sdk_root=$HOME/.buildozer/android/platform/android-sdk \
             "platform-tools" \
@@ -68,9 +65,8 @@ jobs:
             "build-tools;33.0.2" \
             "ndk;23.2.8568313"
 
-      - name: Verify SDK
-        run: |
-          ls -l $HOME/.buildozer/android/platform/android-sdk/build-tools
+          echo "ANDROIDNDK=$HOME/.buildozer/android/platform/android-sdk/ndk/23.2.8568313" >> $GITHUB_ENV
+          echo "ANDROIDAPI=33" >> $GITHUB_ENV
 
       - name: Build APK
         run: |
