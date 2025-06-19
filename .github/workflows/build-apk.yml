@@ -63,7 +63,7 @@ jobs:
         cd ./.buildozer/android/platform
         git clone https://github.com/kivy/python-for-android.git
         cd python-for-android
-        git checkout v2023.06.08
+        git checkout 5be7b7dc2278b1c4c09b57389a78eb250207c522
         pip install -e .
 
     - name: Clean previous builds
