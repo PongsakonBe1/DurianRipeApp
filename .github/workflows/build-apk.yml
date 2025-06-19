@@ -10,31 +10,26 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Python
-        uses: actions/setup-python@v4
+      - uses: actions/setup-python@v4
         with:
           python-version: '3.10'
 
-      - name: Install system dependencies
+      - name: Install dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y git openjdk-17-jdk unzip wget curl build-essential \
             libssl-dev libffi-dev python3-pip ant autoconf automake cmake libtool pkg-config
 
-      - name: Check git version
-        run: git --version
-
-      - name: Set environment variables for Java and Ant
+      - name: Set environment variables
         run: |
           echo "JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64" >> $GITHUB_ENV
           echo "ANT_HOME=/usr/share/ant" >> $GITHUB_ENV
           echo "/usr/lib/jvm/java-17-openjdk-amd64/bin" >> $GITHUB_PATH
           echo "/usr/share/ant/bin" >> $GITHUB_PATH
 
-      - name: Setup Android SDK and NDK
+      - name: Setup Android SDK
         run: |
           export ANDROIDSDK=$HOME/.buildozer/android/platform/android-sdk
           mkdir -p "$ANDROIDSDK/cmdline-tools"
@@ -83,6 +78,7 @@ jobs:
           ANDROIDNDK: ${{ env.ANDROIDNDK }}
           ANDROIDAPI: ${{ env.ANDROIDAPI }}
           JAVA_HOME: ${{ env.JAVA_HOME }}
+          PATH: ${{ env.ANDROIDSDK }}/cmdline-tools/latest/bin:${{ env.ANDROIDSDK }}/platform-tools:/usr/lib/jvm/java-17-openjdk-amd64/bin:/usr/share/ant/bin:$PATH
         run: |
           buildozer android clean
           buildozer android debug
@@ -94,7 +90,7 @@ jobs:
           name: android-apk
           path: bin/*.apk
 
-      - name: Upload build logs on failure
+      - name: Upload logs on failure
         if: failure()
         uses: actions/upload-artifact@v4
         with:
