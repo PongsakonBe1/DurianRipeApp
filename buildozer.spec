@@ -89,7 +89,7 @@ fullscreen = 0
 android.api = 33
 
 # (int) Minimum API your APK / AAB will support.
-android.minapi = 21
+android.minapi = 24
 
 # (int) Android SDK version to use
 android.sdk = 33
@@ -301,7 +301,7 @@ p4a.local_recipes =
 #p4a.setup_py = false
 
 # (str) extra command line arguments to pass when invoking pythonforandroid.toolchain
-#p4a.extra_args =
+p4a.extra_args = --allow-minsdk-ndkapi-mismatch
 
 #
 # iOS specific
