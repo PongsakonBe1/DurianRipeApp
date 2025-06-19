@@ -11,86 +11,93 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-      - uses: actions/checkout@v4
+      - name: ✅ Checkout repo
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v4
+      - name: ✅ Setup Python 3.10
+        uses: actions/setup-python@v4
         with:
           python-version: '3.10'
 
-      - name: Install system dependencies
+      - name: ✅ Install system dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y \
-            git openjdk-17-jdk unzip wget curl build-essential libssl-dev libffi-dev python3-pip
+            git openjdk-17-jdk unzip wget curl build-essential \
+            libssl-dev libffi-dev python3-pip
 
-      - name: Fix libtinfo5 dependency (Ubuntu 22.04 compatibility)
-        run: |
-          sudo ln -sf /lib/x86_64-linux-gnu/libtinfo.so.6 /lib/x86_64-linux-gnu/libtinfo.so.5
+      - name: ✅ Fix libtinfo5 for compatibility
+        run: sudo ln -sf /lib/x86_64-linux-gnu/libtinfo.so.6 /lib/x86_64-linux-gnu/libtinfo.so.5
 
-      - name: Set environment variables
+      - name: ✅ Set JAVA_HOME
         run: |
           echo "JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64" >> $GITHUB_ENV
-          echo "PATH=$PATH:/usr/lib/jvm/java-17-openjdk-amd64/bin" >> $GITHUB_ENV
+          echo "/usr/lib/jvm/java-17-openjdk-amd64/bin" >> $GITHUB_PATH
 
-      - name: Clean previous builds
+      - name: 🧹 Clean old builds
         run: |
-          rm -rf ./.buildozer
+          rm -rf .buildozer
           rm -rf $HOME/.buildozer
 
-      - name: Install Python dependencies
+      - name: ✅ Install Python & Buildozer dependencies
         run: |
-          pip install --upgrade pip
+          pip install --upgrade pip setuptools wheel
           pip install buildozer==1.5.0 cython==0.29.36
 
-      - name: Setup Android SDK and NDK
+      - name: 📦 Setup Android SDK and NDK
         run: |
-          mkdir -p $HOME/.buildozer/android/platform/android-sdk/cmdline-tools
+          mkdir -p $HOME/.buildozer/android/platform
           cd $HOME/.buildozer/android/platform
 
+          echo "📦 Downloading cmdline-tools..."
           wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip
           unzip commandlinetools-linux-9477386_latest.zip -d temp
           rm commandlinetools-linux-9477386_latest.zip
 
-          mv temp/cmdline-tools $HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest
+          mkdir -p android-sdk/cmdline-tools
+          mv temp/cmdline-tools android-sdk/cmdline-tools/latest
 
-      - name: Add SDK tools to PATH
-        run: |
+          echo "✅ Android SDK unpacked"
+          echo "ANDROID_SDK_ROOT=$HOME/.buildozer/android/platform/android-sdk" >> $GITHUB_ENV
           echo "$HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin" >> $GITHUB_PATH
+          echo "$HOME/.buildozer/android/platform/android-sdk/platform-tools" >> $GITHUB_PATH
 
-      - name: Accept Android SDK licenses
+      - name: ✅ Accept licenses
         run: yes | sdkmanager --licenses
 
-      - name: Install Android SDK components
+      - name: ✅ Install SDK components
         run: |
-          sdkmanager --sdk_root=${HOME}/.buildozer/android/platform/android-sdk \
-            "platform-tools" "platforms;android-33" "build-tools;33.0.2" "ndk;25.2.9519653"
+          sdkmanager "platform-tools" "platforms;android-33" "build-tools;33.0.2" "ndk;25.2.9519653"
 
-      - name: First-time Build (warm up python-for-android)
+      - name: ✅ Export ANDROID environment variables
         run: |
-          buildozer android debug || true
+          echo "ANDROIDSDK=$HOME/.buildozer/android/platform/android-sdk" >> $GITHUB_ENV
+          echo "ANDROIDNDK=$HOME/.buildozer/android/platform/android-sdk/ndk/25.2.9519653" >> $GITHUB_ENV
+          echo "ANDROIDAPI=33" >> $GITHUB_ENV
 
-      - name: Optional Clean (if necessary)
+      - name: 🧪 Verify environment
         run: |
-          if [ -d ".buildozer/android/platform/python-for-android" ]; then
-            buildozer android clean
-          fi
+          java -version
+          echo "JAVA_HOME: $JAVA_HOME"
+          echo "ANDROIDSDK: $ANDROIDSDK"
+          echo "ANDROIDNDK: $ANDROIDNDK"
 
-      - name: Final Build
+      - name: 🛠️ Build APK with Buildozer
         run: |
+          buildozer android clean
           buildozer android debug
 
-      - name: Upload APK
+      - name: 📤 Upload APK
         uses: actions/upload-artifact@v4
-        if: success()
         with:
           name: android-apk
           path: bin/*.apk
           retention-days: 30
 
-      - name: Upload build logs
-        uses: actions/upload-artifact@v4
+      - name: 📤 Upload build logs (on failure)
         if: failure()
+        uses: actions/upload-artifact@v4
         with:
           name: build-logs
-          path: .buildozer/android/platform/build-*
+          path: .buildozer/android/platform/build-*/
           retention-days: 7
