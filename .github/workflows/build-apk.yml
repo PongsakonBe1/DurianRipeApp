@@ -11,53 +11,69 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-      - name: Checkout source
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Python
+      - name: Setup Python 3.10
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
 
-      - name: Install dependencies
+      - name: Install system dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y \
-            git openjdk-8-jdk unzip wget curl build-essential \
-            libssl-dev libffi-dev python3-pip zlib1g-dev \
-            libncurses5-dev libncursesw5-dev libreadline-dev \
-            libsqlite3-dev liblzma-dev libbz2-dev libtinfo5
+            git \
+            openjdk-8-jdk \
+            unzip \
+            wget \
+            curl \
+            build-essential \
+            libssl-dev \
+            libffi-dev \
+            python3-pip \
+            autoconf \
+            libtool \
+            pkg-config \
+            zlib1g-dev \
+            libncurses5-dev \
+            libncursesw5-dev \
+            cmake \
+            libltdl-dev \
+            libreadline-dev \
+            libsqlite3-dev \
+            libtinfo5
 
-      - name: Set JAVA and PATH
+      - name: Set JAVA_HOME
         run: |
           echo "JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64" >> $GITHUB_ENV
-          echo "$JAVA_HOME/bin" >> $GITHUB_PATH
+          echo "/usr/lib/jvm/java-8-openjdk-amd64/bin" >> $GITHUB_PATH
+
+      - name: Clean previous builds
+        run: |
+          rm -rf ./.buildozer
+          rm -rf $HOME/.buildozer
 
       - name: Install Python packages
         run: |
           python -m pip install --upgrade pip setuptools wheel
           python -m pip install buildozer==1.5.0 cython==0.29.33
 
-      - name: Setup Android SDK (fixed)
+      - name: Setup Android SDK
         run: |
-          mkdir -p $HOME/.buildozer/android/platform/android-sdk/cmdline-tools
-          cd $HOME/.buildozer/android/platform/android-sdk/cmdline-tools
-
-          wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O tools.zip
-          unzip tools.zip -d temp
-          rm tools.zip
-
-          mv temp/cmdline-tools latest
+          mkdir -p $HOME/.buildozer/android/platform
+          cd $HOME/.buildozer/android/platform
+          
+          wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip
+          unzip cmdline-tools.zip -d cmdline-tools-temp
+          mkdir -p android-sdk/cmdline-tools/latest
+          mv cmdline-tools-temp/cmdline-tools/* android-sdk/cmdline-tools/latest
 
           echo "ANDROIDSDK=$HOME/.buildozer/android/platform/android-sdk" >> $GITHUB_ENV
           echo "$HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin" >> $GITHUB_PATH
           echo "$HOME/.buildozer/android/platform/android-sdk/platform-tools" >> $GITHUB_PATH
 
-      - name: Accept SDK Licenses
-        run: |
-          yes | $HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager --licenses
-
-      - name: Install SDK packages (safe)
+      - name: Install Android SDK components
         run: |
           sdkmanager --sdk_root=$HOME/.buildozer/android/platform/android-sdk \
             "platform-tools" \
@@ -65,8 +81,9 @@ jobs:
             "build-tools;33.0.2" \
             "ndk;23.2.8568313"
 
-          echo "ANDROIDNDK=$HOME/.buildozer/android/platform/android-sdk/ndk/23.2.8568313" >> $GITHUB_ENV
-          echo "ANDROIDAPI=33" >> $GITHUB_ENV
+      - name: Accept Android SDK licenses
+        run: |
+          yes | sdkmanager --sdk_root=$HOME/.buildozer/android/platform/android-sdk --licenses || true
 
       - name: Build APK
         run: |
@@ -81,7 +98,7 @@ jobs:
           path: bin/*.apk
           retention-days: 30
 
-      - name: Upload logs if failed
+      - name: Upload build logs
         uses: actions/upload-artifact@v4
         if: failure()
         with:
