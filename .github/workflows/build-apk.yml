@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-  workflow_dispatch:
+  workflow_dispatch:  # ให้รันด้วยตนเองได้
 
 jobs:
   build:
@@ -17,85 +17,82 @@ jobs:
       - name: Setup Python 3.10
         uses: actions/setup-python@v4
         with:
-          python-version: "3.10"
+          python-version: '3.10'
 
       - name: Install system dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y \
-              git \
-              openjdk-11-jdk \
-              unzip \
-              wget \
-              curl \
-              build-essential \
-              libssl-dev \
-              libffi-dev \
-              python3-pip \
-              autoconf \
-              libtool \
-              pkg-config \
-              zlib1g-dev \
-              libncurses5-dev \
-              libncursesw5-dev \
-              cmake \
-              libltdl-dev \
-              libreadline-dev \
-              libsqlite3-dev \
-              libtinfo5
+            git openjdk-11-jdk unzip wget curl build-essential libssl-dev libffi-dev python3-pip \
+            autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev cmake libltdl-dev libreadline-dev libsqlite3-dev
 
-      - name: Set JAVA_HOME
+      - name: Fix libtinfo5 dependency (Ubuntu 22.04 compatibility)
         run: |
-          echo "JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64" >> $GITHUB_ENV
-          echo "/usr/lib/jvm/java-11-openjdk-amd64/bin" >> $GITHUB_PATH
+          sudo ln -sf /lib/x86_64-linux-gnu/libtinfo.so.6 /lib/x86_64-linux-gnu/libtinfo.so.5
 
-      - name: Set JAVA_HOME
+      - name: Set JAVA_HOME environment variable
         run: |
           echo "JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64" >> $GITHUB_ENV
           echo "PATH=$PATH:/usr/lib/jvm/java-11-openjdk-amd64/bin" >> $GITHUB_ENV
 
-      - name: Clean previous builds
+      - name: Clean previous buildozer caches
         run: |
           rm -rf ./.buildozer
           rm -rf $HOME/.buildozer
 
-      - name: Install Python packages
+      - name: Install Python packages (buildozer, cython, etc.)
         run: |
           python -m pip install --upgrade pip setuptools wheel
-          python -m pip install buildozer==1.5.0 cython==0.29.33
+          python -m pip install buildozer==1.5.0 cython==0.29.33 colorama appdirs sh jinja2 six
 
-      - name: Setup Android SDK
+      - name: Setup Android SDK command line tools
         run: |
           mkdir -p $HOME/.buildozer/android/platform
           cd $HOME/.buildozer/android/platform
+          wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip
+          unzip commandlinetools-linux-9477386_latest.zip
+          rm commandlinetools-linux-9477386_latest.zip
 
-          wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip
-          unzip cmdline-tools.zip -d cmdline-tools-temp
-          mkdir -p android-sdk/cmdline-tools/latest
-          mv cmdline-tools-temp/cmdline-tools/* android-sdk/cmdline-tools/latest
+          mkdir -p android-sdk/cmdline-tools
+          mv cmdline-tools android-sdk/cmdline-tools/latest
 
           echo "ANDROIDSDK=$HOME/.buildozer/android/platform/android-sdk" >> $GITHUB_ENV
-          echo "$HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin" >> $GITHUB_PATH
-          echo "$HOME/.buildozer/android/platform/android-sdk/platform-tools" >> $GITHUB_PATH
-
-      - name: Install Android SDK components
-        run: |
-          sdkmanager --sdk_root=$HOME/.buildozer/android/platform/android-sdk \
-            "platform-tools" \
-            "platforms;android-33" \
-            "build-tools;33.0.2" \
-            "ndk;23.2.8568313"
+          echo "PATH=$PATH:$HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin" >> $GITHUB_ENV
+          echo "PATH=$PATH:$HOME/.buildozer/android/platform/android-sdk/platform-tools" >> $GITHUB_ENV
 
       - name: Accept Android SDK licenses
         run: |
-          yes | sdkmanager --sdk_root=$HOME/.buildozer/android/platform/android-sdk --licenses || true
+          cd $HOME/.buildozer/android/platform/android-sdk
+          yes | ./cmdline-tools/latest/bin/sdkmanager --licenses
 
-      - name: Build APK
+      - name: Install Android SDK components
         run: |
-          buildozer android clean
+          cd $HOME/.buildozer/android/platform/android-sdk
+          ./cmdline-tools/latest/bin/sdkmanager "platform-tools"
+          ./cmdline-tools/latest/bin/sdkmanager "platforms;android-33"
+          ./cmdline-tools/latest/bin/sdkmanager "build-tools;33.0.2"
+          ./cmdline-tools/latest/bin/sdkmanager "ndk;23.2.8568313"
+
+          echo "ANDROIDNDK=$HOME/.buildozer/android/platform/android-sdk/ndk/23.2.8568313" >> $GITHUB_ENV
+          echo "ANDROIDAPI=33" >> $GITHUB_ENV
+
+      - name: Verify environment setup
+        run: |
+          echo "JAVA_HOME: $JAVA_HOME"
+          echo "ANDROIDSDK: $ANDROIDSDK"
+          echo "ANDROIDNDK: $ANDROIDNDK"
+          echo "ANDROIDAPI: $ANDROIDAPI"
+          java -version
+          which python3
+          python3 --version
+
+      - name: Initialize buildozer and build APK
+        run: |
+          buildozer init || true
+          buildozer android clean || true
           buildozer -v android debug
 
-      - name: Upload APK
+      - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         if: success()
         with:
@@ -103,7 +100,7 @@ jobs:
           path: bin/*.apk
           retention-days: 30
 
-      - name: Upload build logs
+      - name: Upload build logs on failure
         uses: actions/upload-artifact@v4
         if: failure()
         with:
