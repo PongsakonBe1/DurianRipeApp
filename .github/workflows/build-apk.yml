@@ -12,7 +12,7 @@ jobs:
 
     env:
       ANDROID_SDK_ROOT: ${{ github.workspace }}/.buildozer/android/platform/android-sdk
-      ANDROID_NDK_VERSION: "25.2.9519653"  # เปลี่ยนเป็น NDK 25 ล่าสุด
+      ANDROID_NDK_VERSION: "25.2.9519653"
       ANDROID_API_LEVEL: "33"
       JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
 
@@ -38,10 +38,9 @@ jobs:
 
       - name: Setup environment variables
         run: |
-          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
-          echo "JAVA_HOME=$JAVA_HOME" >> $GITHUB_ENV
-          echo "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin" >> $GITHUB_PATH
-          echo "$ANDROID_SDK_ROOT/platform-tools" >> $GITHUB_PATH
+          echo "ANDROID_SDK_ROOT=${{ env.ANDROID_SDK_ROOT }}" >> $GITHUB_ENV
+          echo "JAVA_HOME=${{ env.JAVA_HOME }}" >> $GITHUB_ENV
+          echo "PATH=${{ env.ANDROID_SDK_ROOT }}/cmdline-tools/latest/bin:${{ env.ANDROID_SDK_ROOT }}/platform-tools:$PATH" >> $GITHUB_ENV
 
       - name: Accept licenses and install SDK packages
         run: |
