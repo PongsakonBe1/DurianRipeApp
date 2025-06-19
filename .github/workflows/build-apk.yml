@@ -27,12 +27,11 @@ jobs:
       - name: Set JAVA_HOME
         run: echo "JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64" >> $GITHUB_ENV
 
-      - name: Setup Android SDK & Legacy NDK (r21e)
+      - name: Setup Android SDK & NDK (with gfortran support)
         run: |
           mkdir -p $HOME/.buildozer/android/platform/android-sdk/cmdline-tools
           cd $HOME/.buildozer/android/platform/android-sdk/cmdline-tools
 
-          # ดาวน์โหลดและแตก Android Commandline Tools
           wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip
           unzip commandlinetools-linux-9477386_latest.zip
           rm commandlinetools-linux-9477386_latest.zip
@@ -45,16 +44,17 @@ jobs:
 
           yes | sdkmanager --sdk_root=$ANDROID_SDK_ROOT --licenses || true
 
-          # ติดตั้ง platform-tools, platforms และ build-tools (เวอร์ชันเดิม)
           sdkmanager --sdk_root=$ANDROID_SDK_ROOT "platform-tools" "platforms;android-33" "build-tools;33.0.2"
 
-          # ดาวน์โหลด legacy NDK r21e (มี gcc/gfortran)
-          wget https://dl.google.com/android/repository/android-ndk-r21e-linux-x86_64.zip
-          unzip android-ndk-r21e-linux-x86_64.zip -d $HOME/.buildozer/android/platform/android-sdk/ndk/
-          rm android-ndk-r21e-linux-x86_64.zip
+          # ดาวน์โหลด NDK r21e ที่มี gfortran จาก mzakharo repo
+          mkdir -p $ANDROID_SDK_ROOT/ndk
+          cd $ANDROID_SDK_ROOT/ndk
+          wget https://github.com/mzakharo/android-gfortran/releases/download/ndk-r21e/gfortran-android-ndk-r21e-linux-x86_64.zip
+          unzip gfortran-android-ndk-r21e-linux-x86_64.zip
+          rm gfortran-android-ndk-r21e-linux-x86_64.zip
 
-          echo "ANDROIDNDK=$HOME/.buildozer/android/platform/android-sdk/ndk/android-ndk-r21e" >> $GITHUB_ENV
-          echo "LEGACY_NDK=$HOME/.buildozer/android/platform/android-sdk/ndk/android-ndk-r21e" >> $GITHUB_ENV
+          echo "ANDROIDNDK=$ANDROID_SDK_ROOT/ndk/android-ndk-r21e" >> $GITHUB_ENV
+          echo "LEGACY_NDK=$ANDROID_SDK_ROOT/ndk/android-ndk-r21e" >> $GITHUB_ENV
           echo "ANDROIDAPI=33" >> $GITHUB_ENV
           echo "ANDROIDSDK=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
           echo "PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools:$PATH" >> $GITHUB_ENV
