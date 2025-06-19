@@ -20,14 +20,13 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y \
-            git openjdk-17-jdk unzip wget curl build-essential libssl-dev libffi-dev python3-pip
+          sudo apt-get install -y git openjdk-17-jdk unzip wget curl build-essential libssl-dev libffi-dev python3-pip
 
-      - name: Fix libtinfo5 dependency (Ubuntu 22.04 compatibility)
+      - name: Fix libtinfo5 dependency
         run: |
           sudo ln -sf /lib/x86_64-linux-gnu/libtinfo.so.6 /lib/x86_64-linux-gnu/libtinfo.so.5
 
-      - name: Set JAVA_HOME and update PATH
+      - name: Set JAVA_HOME
         run: |
           echo "JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64" >> $GITHUB_ENV
           echo "PATH=$PATH:/usr/lib/jvm/java-17-openjdk-amd64/bin" >> $GITHUB_ENV
@@ -42,28 +41,19 @@ jobs:
           python -m pip install --upgrade pip setuptools wheel
           python -m pip install buildozer==1.5.0
           python -m pip install cython==0.29.33
-          python -m pip install colorama appdirs sh jinja2 six
-          python -m pip install python-for-android==2023.9.16
+          python -m pip install colorama appdirs sh jinja2 six python-for-android==2023.9.16
 
       - name: Setup Android SDK
         run: |
-          set -e
           mkdir -p $HOME/.buildozer/android/platform
           cd $HOME/.buildozer/android/platform
 
           wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip
-          unzip -q commandlinetools-linux-9477386_latest.zip
+          unzip commandlinetools-linux-9477386_latest.zip
           rm commandlinetools-linux-9477386_latest.zip
 
-          # ตรวจสอบชื่อโฟลเดอร์ที่ unzip แล้ว (cmdline-tools หรือ cmdline-tools/cmdline-tools)
-          # ถ้า unzip ได้โฟลเดอร์ cmdline-tools อยู่แล้ว ให้ย้ายเป็น latest
-          if [ -d cmdline-tools ]; then
-            mkdir -p android-sdk/cmdline-tools
-            mv cmdline-tools android-sdk/cmdline-tools/latest
-          else
-            echo "ERROR: cmdline-tools directory not found after unzip"
-            exit 1
-          fi
+          mkdir -p android-sdk/cmdline-tools
+          mv cmdline-tools android-sdk/cmdline-tools/latest
 
           echo "ANDROIDSDK=$HOME/.buildozer/android/platform/android-sdk" >> $GITHUB_ENV
           echo "PATH=$PATH:$HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin" >> $GITHUB_ENV
@@ -90,10 +80,17 @@ jobs:
           which python3
           python3 --version
 
+      - name: Initial build to download python-for-android
+        run: |
+          buildozer android debug --sdk-path $HOME/.buildozer/android/platform/android-sdk || true
+
+      - name: Clean previous builds
+        run: |
+          buildozer android clean --sdk-path $HOME/.buildozer/android/platform/android-sdk
+
       - name: Build APK
         run: |
-          buildozer android clean
-          buildozer android debug
+          buildozer android debug --sdk-path $HOME/.buildozer/android/platform/android-sdk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
