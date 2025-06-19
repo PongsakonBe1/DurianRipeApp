@@ -38,6 +38,10 @@ jobs:
           $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_HOME \
             "platform-tools" "platforms;android-31" "build-tools;36.0.0" \
             "ndk;25.1.8937393" "cmake;3.10.2.4988404"
+      - name: Fix sdkmanager path for Buildozer
+        run: |
+          mkdir -p $HOME/.buildozer/android/platform/android-sdk/tools/bin
+          ln -s $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager $HOME/.buildozer/android/platform/android-sdk/tools/bin/sdkmanager
       - name: Link build-tools for Buildozer compatibility
         run: |
           mkdir -p $HOME/.buildozer/android/platform/android-sdk
