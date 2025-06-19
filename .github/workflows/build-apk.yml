@@ -2,78 +2,76 @@ name: Build APK
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-22.04
 
-    env:
-      ANDROID_SDK_ROOT: /home/runner/Android/Sdk
-      ANDROID_NDK_VERSION: "21.4.7075529"
-      ANDROID_API_LEVEL: "33"
-      JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
-
     steps:
       - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
 
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y git openjdk-17-jdk unzip wget curl build-essential \
-            python3-pip autoconf automake libtool pkg-config cmake ant
+          sudo apt-get install -y git openjdk-17-jdk unzip wget curl build-essential libssl-dev libffi-dev python3-pip
 
-      - name: Setup Android SDK cmdline-tools
-        run: |
-          mkdir -p $ANDROID_SDK_ROOT/cmdline-tools
-          cd $ANDROID_SDK_ROOT/cmdline-tools
-          wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip
-          unzip cmdline-tools.zip
-          rm cmdline-tools.zip
-          mv cmdline-tools latest
+      - name: Set JAVA_HOME
+        run: echo "JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64" >> $GITHUB_ENV
 
-      - name: Setup environment variables
+      - name: Setup Android SDK & NDK
         run: |
-          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
-          echo "JAVA_HOME=$JAVA_HOME" >> $GITHUB_ENV
-          echo "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin" >> $GITHUB_PATH
-          echo "$ANDROID_SDK_ROOT/platform-tools" >> $GITHUB_PATH
-
-      - name: Accept licenses and install SDK packages
-        run: |
-          yes | sdkmanager --sdk_root=$ANDROID_SDK_ROOT --licenses
-          sdkmanager --sdk_root=$ANDROID_SDK_ROOT "platform-tools" "platforms;android-$ANDROID_API_LEVEL" "build-tools;33.0.2" "ndk;$ANDROID_NDK_VERSION"
-
-      - name: Upgrade pip and fix setuptools version
-        run: |
-          python3 -m pip install --upgrade pip
-          python3 -m pip install setuptools==65.5.0
+          mkdir -p $HOME/.buildozer/android/platform/android-sdk/cmdline-tools
+          cd $HOME/.buildozer/android/platform/android-sdk/cmdline-tools
+          wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip
+          unzip commandlinetools-linux-9477386_latest.zip
+          rm commandlinetools-linux-9477386_latest.zip
+          mv cmdline-tools cmdline-tools-temp
+          mv cmdline-tools-temp latest
+          export ANDROID_SDK_ROOT=$HOME/.buildozer/android/platform/android-sdk
+          export PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools:$PATH
+          yes | sdkmanager --sdk_root=$ANDROID_SDK_ROOT --licenses || true
+          sdkmanager --sdk_root=$ANDROID_SDK_ROOT "platform-tools" "platforms;android-33" "build-tools;33.0.2" "ndk;25.2.9519653"
+          echo "ANDROIDNDK=$ANDROID_SDK_ROOT/ndk/25.2.9519653" >> $GITHUB_ENV
+          echo "ANDROIDAPI=33" >> $GITHUB_ENV
+          echo "ANDROIDSDK=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
+          echo "PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools:$PATH" >> $GITHUB_ENV
 
       - name: Install Python dependencies
         run: |
-          python3 -m pip install sh==1.14.3
-          python3 -m pip install buildozer==1.5.0 cython==0.29.33 python-for-android==2024.1.21
+          python -m pip install --upgrade pip setuptools wheel
+          python -m pip install buildozer==1.5.0 cython==0.29.33 tflite-runtime numpy librosa soundfile
 
-      - name: Clean previous builds and cache
-        run: rm -rf ./.buildozer
-
-      - name: Clone python-for-android repo (workaround)
+      - name: Create permissions + spec
         run: |
-          mkdir -p .buildozer/android/platform
-          git clone https://github.com/kivy/python-for-android.git .buildozer/android/platform/python-for-android
+          echo "[app]" > buildozer.spec
+          echo "title = DurianRipeApp" >> buildozer.spec
+          echo "package.name = durian" >> buildozer.spec
+          echo "package.domain = org.example" >> buildozer.spec
+          echo "source.dir = ." >> buildozer.spec
+          echo "source.include_exts = py,wav,tflite" >> buildozer.spec
+          echo "version = 0.1" >> buildozer.spec
+          echo "requirements = python3,kivy,pyjnius,android,tflite-runtime,numpy,librosa,soundfile" >> buildozer.spec
+          echo "android.permissions = RECORD_AUDIO,WRITE_EXTERNAL_STORAGE,READ_EXTERNAL_STORAGE" >> buildozer.spec
+          echo "orientation = portrait" >> buildozer.spec
+          echo "android.api = 33" >> buildozer.spec
+          echo "android.ndk = 25.2.9519653" >> buildozer.spec
+          echo "android.build_tools_version = 33.0.2" >> buildozer.spec
+          echo "android.minapi = 24" >> buildozer.spec
 
       - name: Build APK
-        env:
-          ANDROIDSDK: $ANDROID_SDK_ROOT
-          ANDROIDNDK: $ANDROID_SDK_ROOT/ndk/$ANDROID_NDK_VERSION
-          ANDROIDAPI: $ANDROID_API_LEVEL
-          JAVA_HOME: $JAVA_HOME
-        run: buildozer android debug
+        run: |
+          buildozer android clean
+          buildozer android debug
 
-      - name: Upload APK artifact
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: android-apk
+          name: durian-apk
           path: bin/*.apk
