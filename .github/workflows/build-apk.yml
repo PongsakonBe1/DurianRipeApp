@@ -20,11 +20,24 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt update
-          sudo apt install -y git zip unzip openjdk-17-jdk python3-pip
+          sudo apt install -y zip unzip openjdk-17-jdk python3-pip
+          pip install --upgrade pip
           pip install cython buildozer
+
+      - name: Install Android SDK & NDK
+        run: |
+          sudo mkdir -p /opt/android-sdk
+          sudo chown $USER:$USER /opt/android-sdk
+          yes | sdkmanager --sdk_root=/opt/android-sdk --licenses
+          sdkmanager --sdk_root=/opt/android-sdk \
+            "platform-tools" "platforms;android-31" \
+            "build-tools;33.0.2" "ndk;25.1.8937393" "cmake;3.10.2.4988404" \
+            "tools" "emulator" "extras;android;m2repository"
 
       - name: Build APK
         run: |
+          export ANDROIDSDK=/opt/android-sdk
+          export ANDROIDNDK=$ANDROIDSDK/ndk/25.1.8937393
           buildozer android debug
 
       - name: Upload APK
