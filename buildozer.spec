@@ -110,10 +110,10 @@ android.legacy_ndk = True
 
 
 # (str) Android NDK directory (if empty, it will be automatically downloaded.)
-android.ndk_path = /home/runner/.buildozer/android/platform/android-sdk/ndk/android-ndk-r21e
+android.ndk_path = $ANDROIDNDK
 
 # (str) Android SDK directory (if empty, it will be automatically downloaded.)
-android.sdk_path = /home/runner/.buildozer/android/platform/android-sdk
+android.sdk_path = $ANDROIDSDK
 
 # (bool) If True, then skip trying to update the Android sdk
 # This can be useful to avoid excess Internet downloads or save time
