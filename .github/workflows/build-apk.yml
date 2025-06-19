@@ -35,14 +35,14 @@ jobs:
             libssl-dev \
             libffi-dev \
             python3-pip \
-            python3.10-venv \
-            python3.10-distutils
+            python3-venv \
+            python3-distutils
 
-      - name: Install setuptools and distutils via pip
+      - name: Install Buildozer and dependencies
         run: |
           python3 -m pip install --upgrade pip setuptools cython buildozer
 
-      - name: Set ANDROID SDK environment variables and download cmdline-tools
+      - name: Set ANDROID SDK environment variables
         run: |
           mkdir -p $HOME/android-sdk/cmdline-tools
           cd $HOME/android-sdk/cmdline-tools
