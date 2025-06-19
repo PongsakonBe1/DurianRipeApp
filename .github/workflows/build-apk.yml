@@ -11,84 +11,43 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repo
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v4
+      - name: Setup Python 3.10
+        uses: actions/setup-python@v4
         with:
           python-version: '3.10'
 
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y \
-            git openjdk-17-jdk unzip wget curl build-essential libssl-dev libffi-dev python3-pip
+          sudo apt-get install -y openjdk-17-jdk unzip wget curl build-essential libssl-dev libffi-dev python3-pip
 
-      - name: Fix libtinfo5 dependency (Ubuntu 22.04 compatibility)
+      - name: Fix libtinfo5 dependency (Ubuntu 22.04)
         run: |
           sudo ln -sf /lib/x86_64-linux-gnu/libtinfo.so.6 /lib/x86_64-linux-gnu/libtinfo.so.5
 
-      - name: Set JAVA_HOME and update PATH
+      - name: Set JAVA_HOME environment variable
         run: |
           echo "JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64" >> $GITHUB_ENV
           echo "PATH=$PATH:/usr/lib/jvm/java-17-openjdk-amd64/bin" >> $GITHUB_ENV
 
-      - name: Clean previous builds
-        run: |
-          rm -rf ./.buildozer
-          rm -rf $HOME/.buildozer
-
-      - name: Install Python dependencies
+      - name: Install Python dependencies (Buildozer, python-for-android, etc)
         run: |
           python -m pip install --upgrade pip setuptools wheel
-          python -m pip install buildozer==1.5.0
-          python -m pip install cython==0.29.33
-          python -m pip install colorama appdirs sh jinja2 six
-          python -m pip install python-for-android==2023.9.16
+          python -m pip install buildozer==1.5.0 cython==0.29.33 python-for-android==2023.9.16 colorama appdirs sh jinja2 six
 
-      - name: Setup Android SDK Commandline Tools
+      - name: Clean previous build artifacts
         run: |
-          mkdir -p $HOME/.buildozer/android/platform
-          cd $HOME/.buildozer/android/platform
+          rm -rf ./.buildozer
+          rm -rf ./bin
 
-          wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip
-          unzip commandlinetools-linux-9477386_latest.zip
-          rm commandlinetools-linux-9477386_latest.zip
-
-          mkdir -p android-sdk/cmdline-tools
-          mv cmdline-tools android-sdk/cmdline-tools/latest
-
-          echo "ANDROIDSDK=$HOME/.buildozer/android/platform/android-sdk" >> $GITHUB_ENV
-          echo "PATH=$PATH:$HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin" >> $GITHUB_ENV
-          echo "PATH=$PATH:$HOME/.buildozer/android/platform/android-sdk/platform-tools" >> $GITHUB_ENV
-
-      - name: Accept Android SDK licenses
+      - name: Build APK with Buildozer
         run: |
-          yes | $HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/.buildozer/android/platform/android-sdk --licenses
+          buildozer android debug --verbose
 
-      - name: Install required Android SDK components
-        run: |
-          $HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/.buildozer/android/platform/android-sdk \
-          "platform-tools" "platforms;android-33" "build-tools;33.0.2" "ndk;23.2.8568313"
-
-          echo "ANDROIDNDK=$HOME/.buildozer/android/platform/android-sdk/ndk/23.2.8568313" >> $GITHUB_ENV
-          echo "ANDROIDAPI=33" >> $GITHUB_ENV
-
-      - name: Verify environment
-        run: |
-          echo "JAVA_HOME: $JAVA_HOME"
-          echo "ANDROIDSDK: $ANDROIDSDK"
-          echo "ANDROIDNDK: $ANDROIDNDK"
-          echo "ANDROIDAPI: $ANDROIDAPI"
-          java -version
-          which python3
-          python3 --version
-
-      - name: Build APK
-        run: |
-          buildozer android clean
-          buildozer android debug
-
-      - name: Upload APK artifact
+      - name: Upload APK artifact (if build succeeds)
         uses: actions/upload-artifact@v4
         if: success()
         with:
@@ -96,7 +55,7 @@ jobs:
           path: bin/*.apk
           retention-days: 30
 
-      - name: Upload build logs on failure
+      - name: Upload build logs (if build fails)
         uses: actions/upload-artifact@v4
         if: failure()
         with:
