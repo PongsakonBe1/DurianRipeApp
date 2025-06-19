@@ -12,7 +12,7 @@ jobs:
 
     env:
       ANDROID_SDK_ROOT: /home/runner/Android/Sdk
-      ANDROID_NDK_VERSION: "21.4.7075529"  # แนะนำ NDK r21e สำหรับ buildozer 1.5.0
+      ANDROID_NDK_VERSION: "21.4.7075529"
       ANDROID_API_LEVEL: "33"
       JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
 
@@ -23,8 +23,7 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y \
-            git openjdk-17-jdk unzip wget curl build-essential \
+          sudo apt-get install -y git openjdk-17-jdk unzip wget curl build-essential \
             python3-pip autoconf automake libtool pkg-config cmake ant
 
       - name: Download and setup Android SDK cmdline-tools
@@ -46,24 +45,20 @@ jobs:
       - name: Accept licenses and install SDK packages
         run: |
           yes | sdkmanager --sdk_root=$ANDROID_SDK_ROOT --licenses
-          sdkmanager --sdk_root=$ANDROID_SDK_ROOT \
-            "platform-tools" \
-            "platforms;android-$ANDROID_API_LEVEL" \
-            "build-tools;33.0.2" \
-            "ndk;$ANDROID_NDK_VERSION"
+          sdkmanager --sdk_root=$ANDROID_SDK_ROOT "platform-tools" "platforms;android-$ANDROID_API_LEVEL" "build-tools;33.0.2" "ndk;$ANDROID_NDK_VERSION"
 
-      - name: Upgrade pip, setuptools, wheel
+      - name: Upgrade pip and downgrade setuptools to fix sh build issue
         run: |
-          python3 -m pip install --upgrade pip setuptools wheel
+          python3 -m pip install --upgrade pip
+          python3 -m pip install setuptools==65.5.0
 
-      - name: Install Buildozer, Cython, python-for-android
+      - name: Install sh module pinned version
+        run: |
+          python3 -m pip install sh==1.14.3
+
+      - name: Install buildozer, cython, python-for-android
         run: |
           python3 -m pip install buildozer==1.5.0 cython==0.29.33 python-for-android==2024.1.21
-
-      - name: Show python-for-android version and path
-        run: |
-          python3 -m pythonforandroid.toolchain --version
-          which python-for-android || echo "python-for-android command not found"
 
       - name: Build APK with Buildozer
         env:
