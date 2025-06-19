@@ -12,7 +12,7 @@ jobs:
 
     env:
       ANDROID_SDK_ROOT: /home/runner/Android/Sdk
-      ANDROID_NDK_VERSION: "21.4.7075529"  # NDK r21e (legacy gcc support)
+      ANDROID_NDK_VERSION: "21.4.7075529"  # NDK r21e ที่แนะนำ
       ANDROID_API_LEVEL: "33"
       JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
 
@@ -51,13 +51,17 @@ jobs:
         run: |
           python3 -m pip install --upgrade pip setuptools wheel
 
-      - name: Install Python dependencies
+      - name: Install sh module pinned version
+        run: |
+          python3 -m pip install sh==1.14.3
+
+      - name: Install buildozer and cython
         run: |
           python3 -m pip install buildozer==1.5.0 cython==0.29.33
 
-      - name: Install python-for-android (latest)
+      - name: Install python-for-android
         run: |
-          python3 -m pip install python-for-android
+          python3 -m pip install --force-reinstall --no-cache-dir python-for-android
 
       - name: Build APK with Buildozer
         env:
