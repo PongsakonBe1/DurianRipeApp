@@ -16,7 +16,7 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Install dependencies
+      - name: Install system dependencies including git
         run: |
           sudo apt-get update
           sudo apt-get install -y git openjdk-17-jdk unzip wget curl build-essential \
