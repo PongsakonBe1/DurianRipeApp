@@ -38,20 +38,13 @@ jobs:
           rm cmdline-tools.zip
           mv cmdline-tools latest
 
-      - name: Accept licenses for platform-tools
+      - name: Accept Android SDK licenses
         run: yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/android-sdk --licenses
 
-      - name: Install platform-tools
-        run: yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/android-sdk "platform-tools"
-
-      - name: Accept licenses for build-tools
-        run: yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/android-sdk --licenses
-
-      - name: Install build-tools 33.0.2
-        run: yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/android-sdk "build-tools;33.0.2"
-
-      - name: Install platforms and ndk
-        run: yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/android-sdk "platforms;android-33" "ndk;25.2.9519653"
+      - name: Install Android SDK packages
+        run: |
+          yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/android-sdk \
+            "platform-tools" "platforms;android-33" "build-tools;33.0.2" "ndk;25.2.9519653"
 
       - name: Check build-tools folder
         run: ls -l $HOME/android-sdk/build-tools
