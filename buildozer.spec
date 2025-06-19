@@ -16,7 +16,7 @@ source.dir = .
 source.include_exts = py,png,jpg,kv,atlas,tflite
 
 # (list) Application requirements
-requirements = python3==3.10,kivy,kivymd,numpy,tflite-runtime
+requirements = python3,kivy,kivymd,numpy,tensorflow-lite
 
 # (str) Application versioning (method 1)
 version = 0.1
@@ -310,7 +310,7 @@ android.allow_backup = True
 #p4a.fork = kivy
 
 # (str) python-for-android branch to use, defaults to master
-#p4a.branch = master
+p4a.branch = develop
 
 # (str) python-for-android specific commit to use, defaults to HEAD, must be within p4a.branch
 #p4a.commit = HEAD
