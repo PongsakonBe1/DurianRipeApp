@@ -31,14 +31,17 @@ jobs:
           cd $HOME/android-sdk/cmdline-tools
           wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O tools.zip
           unzip tools.zip
-          mv cmdline-tools latest  # ย้าย folder ที่ถูกซ้อนลงมาใน latest
+          mv cmdline-tools latest
           export ANDROID_HOME=$HOME/android-sdk
           export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$PATH
           yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_HOME --licenses
           $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_HOME \
-            "platform-tools" "platforms;android-31" "build-tools;33.0.2" \
+            "platform-tools" "platforms;android-31" "build-tools;36.0.0" \
             "ndk;25.1.8937393" "cmake;3.10.2.4988404"
-
+      - name: Link build-tools for Buildozer compatibility
+        run: |
+          mkdir -p $HOME/.buildozer/android/platform/android-sdk
+          ln -s $HOME/android-sdk/build-tools $HOME/.buildozer/android/platform/android-sdk/build-tools
       - name: Build APK
         run: |
           export ANDROIDSDK=$HOME/android-sdk
