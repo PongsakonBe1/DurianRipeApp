@@ -12,7 +12,7 @@ jobs:
 
     env:
       ANDROID_SDK_ROOT: ${{ github.workspace }}/.buildozer/android/platform/android-sdk
-      ANDROID_NDK_VERSION: "21.4.7075529"
+      ANDROID_NDK_VERSION: "25.2.9519653"  # เปลี่ยนเป็น NDK 25 ล่าสุด
       ANDROID_API_LEVEL: "33"
       JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
 
@@ -39,8 +39,8 @@ jobs:
       - name: Setup environment variables
         run: |
           echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
-          echo "JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64" >> $GITHUB_ENV
-          echo "$ANDROID_SDK_ROOT/cmdline-tools/latest/cmdline-tools/bin" >> $GITHUB_PATH
+          echo "JAVA_HOME=$JAVA_HOME" >> $GITHUB_ENV
+          echo "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin" >> $GITHUB_PATH
           echo "$ANDROID_SDK_ROOT/platform-tools" >> $GITHUB_PATH
 
       - name: Accept licenses and install SDK packages
@@ -71,7 +71,7 @@ jobs:
           ANDROIDSDK: ${{ env.ANDROID_SDK_ROOT }}
           ANDROIDNDK: ${{ env.ANDROID_SDK_ROOT }}/ndk/${{ env.ANDROID_NDK_VERSION }}
           ANDROIDAPI: ${{ env.ANDROID_API_LEVEL }}
-          JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
+          JAVA_HOME: ${{ env.JAVA_HOME }}
         run: |
           buildozer android clean
           buildozer android debug
