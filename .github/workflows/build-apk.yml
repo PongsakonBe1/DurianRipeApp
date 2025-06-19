@@ -10,27 +10,17 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-      - name: Setup Python 3.10
-        uses: actions/setup-python@v4
+      - uses: actions/setup-python@v4
         with:
           python-version: '3.10'
 
-      - name: Install dependencies
+      - name: Install system dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y \
-            git \
-            openjdk-11-jdk \
-            unzip \
-            wget \
-            curl \
-            build-essential \
-            libssl-dev \
-            libffi-dev \
-            python3-pip
+            git openjdk-11-jdk unzip wget curl build-essential libssl-dev libffi-dev python3-pip
 
       - name: Install Buildozer and Cython
         run: |
@@ -46,14 +36,14 @@ jobs:
           rm cmdline-tools.zip
           mv cmdline-tools latest
 
-      - name: Check sdkmanager path and files
-        run: ls -l $HOME/android-sdk/cmdline-tools/latest/bin/
-
-      - name: Accept licenses
+      - name: Accept Android SDK licenses
         run: yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/android-sdk --licenses
 
       - name: Install Android SDK packages
-        run: $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/android-sdk "platform-tools" "platforms;android-33" "build-tools;33.0.2" "ndk;25.2.9519653"
+        run: $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/android-sdk "platform-tools" "platforms;android-33" "build-tools;36.0.0" "ndk;25.2.9519653"
+
+      - name: Check build-tools folder
+        run: ls -l $HOME/android-sdk/build-tools
 
       - name: Export environment variables
         run: |
