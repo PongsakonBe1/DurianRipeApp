@@ -36,17 +36,15 @@ jobs:
             libffi-dev \
             python3-pip
 
-      - name: Install Buildozer and dependencies
+      - name: Upgrade pip and install Python packages
         run: |
-          python -m pip install --upgrade pip
-          python -m pip install buildozer
-          python -m pip install cython
+          python -m pip install --upgrade pip setuptools wheel
+          python -m pip install buildozer cython
 
       - name: Set ANDROID SDK environment variables
         run: |
           mkdir -p $HOME/android-sdk/cmdline-tools
           cd $HOME/android-sdk/cmdline-tools
-          # Download latest cmdline tools
           wget https://dl.google.com/android/repository/commandlinetools-linux-8512546_latest.zip -O cmdline-tools.zip
           unzip cmdline-tools.zip
           rm cmdline-tools.zip
@@ -60,7 +58,7 @@ jobs:
           yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_SDK_ROOT "platform-tools" "platforms;android-33" "build-tools;33.0.2" "ndk;25.2.9519653"
         shell: bash
 
-      - name: Set environment variables for Buildozer
+      - name: Export environment variables for Buildozer
         run: |
           echo "ANDROIDSDK=$HOME/android-sdk" >> $GITHUB_ENV
           echo "ANDROIDNDK=$HOME/android-sdk/ndk/25.2.9519653" >> $GITHUB_ENV
