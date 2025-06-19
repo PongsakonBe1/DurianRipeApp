@@ -24,6 +24,9 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y git openjdk-17-jdk unzip wget curl build-essential libssl-dev libffi-dev python3-pip
 
+      - name: Set JAVA_HOME
+        run: echo "JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64" >> $GITHUB_ENV
+
       - name: Setup Android SDK & NDK
         run: |
           mkdir -p $HOME/.buildozer/android/platform/android-sdk/cmdline-tools
@@ -86,7 +89,8 @@ jobs:
           ANDROIDSDK: ${{ env.ANDROIDSDK }}
           ANDROIDNDK: ${{ env.ANDROIDNDK }}
           ANDROIDAPI: ${{ env.ANDROIDAPI }}
-          PATH: ${{ env.PATH }}
+          JAVA_HOME: ${{ env.JAVA_HOME }}
+          PATH: ${{ env.PATH }}:${{ env.JAVA_HOME }}/bin
         run: |
           buildozer android clean
           buildozer android debug
