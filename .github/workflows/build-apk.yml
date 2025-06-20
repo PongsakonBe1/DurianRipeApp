@@ -12,7 +12,7 @@ jobs:
 
     env:
       ANDROID_SDK_ROOT: ${{ github.workspace }}/.buildozer/android/platform/android-sdk
-      ANDROID_NDK_VERSION: "25.2.9519653"
+      ANDROID_NDK_VERSION: "25b"  # ใช้ r25b ตาม URL ดาวน์โหลดจริง
       ANDROID_API_LEVEL: "33"
       JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
 
@@ -31,10 +31,10 @@ jobs:
           mkdir -p $ANDROID_SDK_ROOT/cmdline-tools
           cd $ANDROID_SDK_ROOT/cmdline-tools
           wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip
-          unzip -q cmdline-tools.zip
-          rm -rf latest
-          mv cmdline-tools latest
-          rm cmdline-tools.zip
+          unzip -q cmdline-tools.zip -d latest_tmp
+          mkdir -p latest
+          mv latest_tmp/cmdline-tools latest/
+          rm -rf latest_tmp cmdline-tools.zip
 
       - name: Setup environment variables
         run: |
@@ -53,7 +53,7 @@ jobs:
         run: |
           mkdir -p $ANDROID_SDK_ROOT/ndk
           cd $ANDROID_SDK_ROOT/ndk
-          wget https://dl.google.com/android/repository/android-ndk-r25.2.9519653-linux.zip -O android-ndk.zip
+          wget https://dl.google.com/android/repository/android-ndk-r25b-linux.zip -O android-ndk.zip
           unzip -q android-ndk.zip
           rm android-ndk.zip
 
@@ -78,7 +78,7 @@ jobs:
       - name: Build APK
         env:
           ANDROIDSDK: ${{ env.ANDROID_SDK_ROOT }}
-          ANDROIDNDK: ${{ env.ANDROID_SDK_ROOT }}/ndk/android-ndk-r25.2.9519653
+          ANDROIDNDK: ${{ env.ANDROID_SDK_ROOT }}/ndk/android-ndk-r25b
           ANDROIDAPI: ${{ env.ANDROID_API_LEVEL }}
           JAVA_HOME: ${{ env.JAVA_HOME }}
         run: |
