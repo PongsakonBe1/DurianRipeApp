@@ -75,7 +75,7 @@ jobs:
 
       - name: Remove legacy Python2 scripts from NDK
         run: |
-          find .buildozer -type f -name "run-find-all-symbols.py" -delete
+          find $ANDROID_NDK_ROOT -type f -name "*.py" -exec rm -f {} +
       - name: Build APK
         env:
           ANDROIDSDK: ${{ env.ANDROID_SDK_ROOT }}
@@ -83,7 +83,6 @@ jobs:
           ANDROIDAPI: ${{ env.ANDROID_API_LEVEL }}
           JAVA_HOME: ${{ env.JAVA_HOME }}
         run: |
-          buildozer android clean
           buildozer android debug --verbose android.ndk_path=$ANDROIDNDK android.sdk_path=$ANDROIDSDK
 
       - name: Upload APK artifact
