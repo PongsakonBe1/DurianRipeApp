@@ -30,7 +30,6 @@ class DurianApp(App):
         self.model_path = "best_durian_model.tflite"
         self.audio_path = "/sdcard/audio.wav"
         self.interpreter = None
-        self.load_model()
 
         # สีธีม
         main_bg = "#808836"
@@ -96,7 +95,11 @@ class DurianApp(App):
         )
         self.layout.add_widget(self.result_label)
 
+        # ✅ ย้ายมาตรงนี้ หลังจาก result_label ถูกสร้าง
+        self.load_model()
+
         return self.layout
+
 
     def _update_rect(self, instance, value):
         self.rect_bg.size = instance.size
