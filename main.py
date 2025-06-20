@@ -8,6 +8,8 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
 from kivy.uix.label import Label
 from kivy.utils import get_color_from_hex
+from kivy.resources import resource_find
+
 
 # ตรวจสอบว่าเป็น Android หรือไม่
 is_android = platform.system() == 'Linux' and 'ANDROID_ARGUMENT' in os.environ
