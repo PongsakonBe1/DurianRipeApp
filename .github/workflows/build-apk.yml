@@ -73,6 +73,9 @@ jobs:
       - name: Remove existing assets folder if any
         run: rm -rf ./src/main/assets
 
+      - name: Remove legacy Python2 scripts from NDK
+        run: |
+          find .buildozer -type f -name "run-find-all-symbols.py" -delete
       - name: Build APK
         env:
           ANDROIDSDK: ${{ env.ANDROID_SDK_ROOT }}

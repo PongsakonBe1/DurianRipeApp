@@ -108,7 +108,7 @@ android.private_storage = True
 
 android.legacy_ndk = True
 
-android.p4a_extra_args = --no-compile-pyo
+android.p4a_extra_args = --no-compile-pyo --exclude_build_dirs=android-ndk
 # (str) Android NDK directory (if empty, it will be automatically downloaded.)
 android.ndk_path = /home/runner/Android/Sdk/ndk/25b
 
