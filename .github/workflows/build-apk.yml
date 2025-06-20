@@ -3,7 +3,7 @@ name: Build Kivy Android App
 on:
   push:
     branches:
-      - main  # หรือชื่อ branch ที่คุณใช้ เช่น 'master'
+      - main
 
 jobs:
   build:
@@ -21,11 +21,29 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt update
-          sudo apt install -y libasound2-dev ffmpeg zip unzip
+          sudo apt install -y \
+            libasound2-dev \
+            ffmpeg \
+            zip \
+            unzip \
+            libgl1-mesa-dev \
+            libgles2-mesa-dev \
+            libsdl2-dev \
+            libsdl2-image-dev \
+            libsdl2-mixer-dev \
+            libsdl2-ttf-dev \
+            libportmidi-dev \
+            libswscale-dev \
+            libavformat-dev \
+            libavcodec-dev \
+            libfreetype6-dev \
+            libjpeg-dev \
+            libpng-dev
 
-      - name: Install Buildozer
+      - name: Install Python dependencies (Buildozer + Cython)
         run: |
-          pip install --upgrade pip
+          python -m pip install --upgrade pip
+          pip install cython
           pip install buildozer
 
       - name: Build APK
