@@ -284,7 +284,7 @@ p4a.branch = develop
 #p4a.commit = HEAD
 
 # (str) python-for-android git clone directory (if empty, it will be automatically cloned from github)
-p4a.source_dir = ./.buildozer/android/platform/python-for-android
+#p4a.source_dir = ./.buildozer/android/platform/python-for-android
 
 # (str) The directory in which python-for-android should look for your own build recipes (if any)
 p4a.local_recipes =
