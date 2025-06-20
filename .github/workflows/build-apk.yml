@@ -11,8 +11,8 @@ jobs:
     runs-on: ubuntu-22.04
 
     env:
-      ANDROID_SDK_ROOT: ${{ github.workspace }}/.buildozer/android/platform/android-sdk
-      ANDROID_NDK_VERSION: "28.1.13356709"
+      ANDROID_SDK_ROOT: ${{ github.workspace }}/android-sdk
+      ANDROID_NDK_ROOT: ${{ github.workspace }}/android-ndk/android-ndk-r25b
       ANDROID_API_LEVEL: "33"
       JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
 
@@ -26,36 +26,42 @@ jobs:
           sudo apt-get install -y git openjdk-17-jdk unzip wget curl build-essential \
             python3-pip autoconf automake libtool pkg-config cmake ant
 
-      - name: Setup Android SDK cmdline-tools
+      - name: Download Android SDK cmdline-tools
         run: |
           mkdir -p $ANDROID_SDK_ROOT/cmdline-tools
-          cd $ANDROID_SDK_ROOT/cmdline-tools
           wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip
-          unzip -q cmdline-tools.zip
-          mv cmdline-tools latest
+          unzip -q cmdline-tools.zip -d $ANDROID_SDK_ROOT/cmdline-tools
           rm cmdline-tools.zip
+          mv $ANDROID_SDK_ROOT/cmdline-tools/cmdline-tools $ANDROID_SDK_ROOT/cmdline-tools/latest
 
-      - name: Setup environment variables
+      - name: Set ANDROID_HOME and PATH
         run: |
           echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
-          echo "PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$PATH" >> $GITHUB_ENV
+          echo "JAVA_HOME=$JAVA_HOME" >> $GITHUB_ENV
+          echo "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin" >> $GITHUB_PATH
+          echo "$ANDROID_SDK_ROOT/platform-tools" >> $GITHUB_PATH
 
-      - name: Accept licenses and install SDK packages
+      - name: Accept licenses
+        run: yes | sdkmanager --sdk_root=$ANDROID_SDK_ROOT --licenses
+
+      - name: Install Android SDK packages
         run: |
-          yes | sdkmanager --sdk_root=$ANDROID_SDK_ROOT --licenses
+          sdkmanager --sdk_root=$ANDROID_SDK_ROOT "platform-tools" "platforms;android-$ANDROID_API_LEVEL" "build-tools;33.0.2"
 
-      - name: Upgrade pip and fix setuptools version
+      - name: Download Android NDK 25b
+        run: |
+          mkdir -p ${{ env.ANDROID_NDK_ROOT }}
+          wget https://dl.google.com/android/repository/android-ndk-r25b-linux.zip -O ndk.zip
+          unzip -q ndk.zip -d ${{ github.workspace }}/android-ndk
+          rm ndk.zip
+
+      - name: Upgrade pip and install python packages
         run: |
           python3 -m pip install --upgrade pip
           python3 -m pip install setuptools==65.5.0
+          python3 -m pip install sh==1.14.3 buildozer==1.5.0 cython==0.29.33 python-for-android==2024.1.21
 
-      - name: Install Python dependencies
-        run: |
-          python3 -m pip install sh==1.14.3
-          python3 -m pip install buildozer==1.5.0 cython==0.29.33 python-for-android==2024.1.21
-          python3 -m pip install librosa soundfile
-
-      - name: Clean previous builds and cache
+      - name: Clean previous builds
         run: rm -rf ./.buildozer
 
       - name: Clone python-for-android repo (workaround)
@@ -66,12 +72,12 @@ jobs:
       - name: Build APK
         env:
           ANDROIDSDK: ${{ env.ANDROID_SDK_ROOT }}
-          ANDROIDNDK: ${{ env.ANDROID_SDK_ROOT }}/ndk/${{ env.ANDROID_NDK_VERSION }}
+          ANDROIDNDK: ${{ env.ANDROID_NDK_ROOT }}
           ANDROIDAPI: ${{ env.ANDROID_API_LEVEL }}
           JAVA_HOME: ${{ env.JAVA_HOME }}
         run: |
           buildozer android clean
-          buildozer android debug
+          buildozer android debug android.ndk_path=$ANDROIDNDK android.sdk_path=$ANDROIDSDK android.ndk=None
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
