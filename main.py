@@ -29,8 +29,8 @@ def font_color(hex_color):
 
 class DurianApp(App):
     def build(self):
-        self.model_path = resource_find("models/best_durian_model.tflite")
-        self.audio_path = "/sdcard/audio.wav"
+        self.model_path = resource_find("assets/models/best_durian_model.tflite")
+        self.audio_path = "audio.wav"
         self.interpreter = None
 
         # สีธีม
@@ -50,7 +50,7 @@ class DurianApp(App):
         self.title_label = Label(
             text="ตัวทำนายความสุกของทุเรียน",
             font_size='24sp',
-            font_name=resource_find("fonts/Prompt-Regular.ttf"),
+            font_name=resource_find("assets/fonts/Prompt-Regular.ttf"),
             color=font_color(main_bg)
         )
         self.layout.add_widget(self.title_label)
@@ -58,7 +58,7 @@ class DurianApp(App):
         self.record_button = Button(
             text="อัดเสียงทุเรียน",
             font_size='20sp',
-            font_name=resource_find("fonts/Prompt-Regular.ttf"),
+            font_name=resource_find("assets/fonts/Prompt-Regular.ttf"),
             on_press=self.record_audio,
             background_normal='',
             background_color=get_color_from_hex(secondary_bg),
@@ -69,7 +69,7 @@ class DurianApp(App):
         self.play_button = Button(
             text="ฟังเสียงที่อัด",
             font_size='20sp',
-            font_name=resource_find("fonts/Prompt-Regular.ttf"),
+            font_name=resource_find("assets/fonts/Prompt-Regular.ttf"),
             on_press=self.play_audio,
             disabled=True,
             background_normal='',
@@ -81,7 +81,7 @@ class DurianApp(App):
         self.predict_button = Button(
             text="ทำนายความสุก",
             font_size='20sp',
-            font_name=resource_find("fonts/Prompt-Regular.ttf"),
+            font_name=resource_find("assets/fonts/Prompt-Regular.ttf"),
             on_press=self.run_inference,
             background_normal='',
             background_color=get_color_from_hex(accent2),
@@ -92,7 +92,7 @@ class DurianApp(App):
         self.result_label = Label(
             text="ผลการทำนายจะแสดงที่นี่",
             font_size='22sp',
-            font_name=resource_find("fonts/Prompt-Regular.ttf"),
+            font_name=resource_find("assets/fonts/Prompt-Regular.ttf"),
             color=font_color(main_bg)
         )
         self.layout.add_widget(self.result_label)
