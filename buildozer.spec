@@ -36,7 +36,7 @@ version = 0.1
 
 # (list) Application requirements
 # comma separated e.g. requirements = sqlite3,kivy
-requirements = kivy, numpy, sounddevice, soundfile, librosa, tensorflow-lite, jnius
+requirements = python3,kivy,numpy,soundfile,librosa,tflite-runtime
 
 # (str) Custom source folders for requirements
 # Sets custom source for any requirements with recipes
@@ -110,7 +110,7 @@ android.legacy_ndk = True
 
 
 # (str) Android NDK directory (if empty, it will be automatically downloaded.)
-android.ndk_path = $ANDROID_SDK_ROOT/ndk/25.2.9519653
+android.ndk_path = /home/runner/Android/Sdk/ndk/25.2.9519653
 
 # (str) Android SDK directory (if empty, it will be automatically downloaded.)
 android.sdk_path = /home/runner/Android/Sdk
@@ -155,7 +155,7 @@ android.accept_sdk_license = True
 # Either form may be used, and assets need not be in 'source.include_exts'.
 # 1) android.add_assets = source_asset_relative_path
 # 2) android.add_assets = source_asset_path:destination_asset_relative_path
-#android.add_assets =
+android.add_assets = Prompt-Regular.ttf,best_durian_model.tflite
 
 # (list) Gradle dependencies to add
 #android.gradle_dependencies =
