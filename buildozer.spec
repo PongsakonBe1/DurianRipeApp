@@ -155,7 +155,7 @@ android.accept_sdk_license = True
 # Either form may be used, and assets need not be in 'source.include_exts'.
 # 1) android.add_assets = source_asset_relative_path
 # 2) android.add_assets = source_asset_path:destination_asset_relative_path
-android.add_assets = Prompt-Regular.ttf,best_durian_model.tflite, model.tflite, 
+android.add_assets = Prompt-Regular.ttf,best_durian_model.tflite,model.tflite
 
 # (list) Gradle dependencies to add
 #android.gradle_dependencies =

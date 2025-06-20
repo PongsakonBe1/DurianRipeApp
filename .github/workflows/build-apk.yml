@@ -42,33 +42,36 @@ jobs:
           echo "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin" >> $GITHUB_PATH
           echo "$ANDROID_SDK_ROOT/platform-tools" >> $GITHUB_PATH
 
-      - name: Accept licenses
+      - name: Accept SDK licenses
         run: yes | sdkmanager --sdk_root=$ANDROID_SDK_ROOT --licenses
 
       - name: Install Android SDK packages
         run: |
-          sdkmanager --sdk_root=$ANDROID_SDK_ROOT "platform-tools" "platforms;android-$ANDROID_API_LEVEL" "build-tools;33.0.2"
+          sdkmanager --sdk_root=$ANDROID_SDK_ROOT "platform-tools" "platforms;android-${ANDROID_API_LEVEL}" "build-tools;33.0.2"
 
-      - name: Download Android NDK 25b
+      - name: Download Android NDK r25b
         run: |
-          mkdir -p ${{ github.workspace }}/android-ndk
+          mkdir -p ${{ env.ANDROID_NDK_ROOT }}
           wget https://dl.google.com/android/repository/android-ndk-r25b-linux.zip -O ndk.zip
           unzip -q ndk.zip -d ${{ github.workspace }}/android-ndk
           rm ndk.zip
 
-      - name: Upgrade pip and install python packages
+      - name: Upgrade pip and install Python packages
         run: |
           python3 -m pip install --upgrade pip
           python3 -m pip install setuptools==65.5.0
           python3 -m pip install sh==1.14.3 buildozer==1.5.0 cython==0.29.33 python-for-android==2024.1.21
 
-      - name: Clean previous builds
+      - name: Clean previous build cache
         run: rm -rf ./.buildozer
 
-      - name: Clone python-for-android repo (workaround)
+      - name: Clone python-for-android (force override)
         run: |
           mkdir -p .buildozer/android/platform
           git clone https://github.com/kivy/python-for-android.git .buildozer/android/platform/python-for-android
+
+      - name: Remove existing assets folder if any
+        run: rm -rf ./src/main/assets
 
       - name: Build APK
         env:
