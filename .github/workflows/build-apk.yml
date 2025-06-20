@@ -31,11 +31,12 @@ jobs:
           mkdir -p $ANDROID_SDK_ROOT/cmdline-tools
           cd $ANDROID_SDK_ROOT/cmdline-tools
           wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip
-          unzip -q cmdline-tools.zip -d cmdline-tools
-          mv cmdline-tools $ANDROID_SDK_ROOT/cmdline-tools/latest
-          rm cmdline-tools.zip
+          unzip -q cmdline-tools.zip -d cmdline-tools-temp
+          mkdir -p latest
+          mv cmdline-tools-temp/cmdline-tools/* latest/
+          rm -rf cmdline-tools-temp cmdline-tools.zip
 
-      - name: Add SDK paths to environment
+      - name: Setup environment variables
         run: |
           echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
           echo "JAVA_HOME=$JAVA_HOME" >> $GITHUB_ENV
@@ -44,9 +45,12 @@ jobs:
 
       - name: Accept licenses and install SDK packages
         run: |
-          export PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$PATH
-          yes | sdkmanager --licenses
-          sdkmanager "platform-tools" "platforms;android-${ANDROID_API_LEVEL}" "build-tools;33.0.2" "ndk;${ANDROID_NDK_VERSION}"
+          yes | sdkmanager --sdk_root=$ANDROID_SDK_ROOT --licenses
+          sdkmanager --sdk_root=$ANDROID_SDK_ROOT \
+            "platform-tools" \
+            "platforms;android-${ANDROID_API_LEVEL}" \
+            "build-tools;33.0.2" \
+            "ndk;$ANDROID_NDK_VERSION"
 
       - name: Upgrade pip and fix setuptools version
         run: |
@@ -58,24 +62,15 @@ jobs:
           python3 -m pip install sh==1.14.3
           python3 -m pip install buildozer==1.5.0 cython==0.29.33 python-for-android==2024.1.21
 
-      - name: Clean previous builds
+      - name: Clean previous builds and cache
         run: rm -rf ./.buildozer
 
-      - name: Clone python-for-android repo manually (workaround)
+      - name: Clone python-for-android repo (workaround)
         run: |
           mkdir -p .buildozer/android/platform
           git clone https://github.com/kivy/python-for-android.git .buildozer/android/platform/python-for-android
 
-      - name: Download Android NDK manually
-        run: |
-          mkdir -p $ANDROID_SDK_ROOT/ndk
-          cd $ANDROID_SDK_ROOT/ndk
-          wget https://dl.google.com/android/repository/android-ndk-r25b-linux.zip -O ndk.zip
-          unzip -q ndk.zip
-          mv android-ndk-r25b $ANDROID_NDK_VERSION
-          rm ndk.zip
-
-      - name: Build APK with Buildozer
+      - name: Build APK
         env:
           ANDROIDSDK: ${{ env.ANDROID_SDK_ROOT }}
           ANDROIDNDK: ${{ env.ANDROID_SDK_ROOT }}/ndk/${{ env.ANDROID_NDK_VERSION }}
