@@ -89,7 +89,7 @@ android.permissions = RECORD_AUDIO,WRITE_EXTERNAL_STORAGE,READ_EXTERNAL_STORAGE
 android.api = 33
 
 # (int) Minimum API your APK / AAB will support.
-android.minapi = 21
+android.minapi = 24
 
 # (int) Android SDK version to use
 #android.sdk = 33
@@ -108,7 +108,7 @@ android.private_storage = True
 
 android.legacy_ndk = True
 
-
+android.p4a_extra_args = --no-compile-pyo
 # (str) Android NDK directory (if empty, it will be automatically downloaded.)
 android.ndk_path = /home/runner/Android/Sdk/ndk/25b
 
