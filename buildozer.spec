@@ -95,7 +95,7 @@ android.minapi = 21
 #android.sdk = 33
 
 # (str) Android NDK version to use
-android.ndk = 25b
+android.ndk = 25.2.9519653
 
 # (int) Android NDK API to use. This is the minimum API your app will support, 
 # it should usually match android.minapi.
@@ -155,7 +155,7 @@ android.accept_sdk_license = True
 # Either form may be used, and assets need not be in 'source.include_exts'.
 # 1) android.add_assets = source_asset_relative_path
 # 2) android.add_assets = source_asset_path:destination_asset_relative_path
-android.add_assets = Prompt-Regular.ttf,best_durian_model.tflite
+android.add_assets = Prompt-Regular.ttf,best_durian_model.tflite, model.tflite, 
 
 # (list) Gradle dependencies to add
 #android.gradle_dependencies =
