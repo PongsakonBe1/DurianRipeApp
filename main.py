@@ -11,11 +11,8 @@ from kivy.utils import get_color_from_hex
 from kivy.resources import resource_find
 from kivy.resources import resource_add_path
 
-resource_add_path(os.path.abspath(os.path.join(os.path.dirname(__file__), 'assets')))
-
-
-resolved = resource_find(path)
-print(f"[DEBUG] resolved font path for {path}: {resolved}")
+# เพิ่ม path สำหรับ desktop และ Android
+resource_add_path(os.path.abspath("assets"))
 
 # ตรวจสอบว่าเป็น Android หรือไม่
 is_android = platform.system() == 'Linux' and 'ANDROID_ARGUMENT' in os.environ
@@ -34,12 +31,16 @@ def register_asset_paths():
         resource_add_path(os.path.join(base_path, "assets"))
         resource_add_path(os.path.join(base_path, "assets", "fonts"))
         resource_add_path(os.path.join(base_path, "assets", "models"))
+    else:
+        resource_add_path(os.path.abspath("assets/fonts"))
+        resource_add_path(os.path.abspath("assets/models"))
 
 def safe_font(path):
     resolved = resource_find(path)
+    print(f"[DEBUG] resolved font path for {path}: {resolved}")
     if not resolved:
         print(f"[ERROR] ไม่พบฟอนต์: {path}")
-        return None  # หรือใช้ default font
+        return "Roboto"  # fallback default
     return resolved
 
 def font_color(hex_color):
@@ -52,10 +53,9 @@ class DurianApp(App):
     def build(self):
         register_asset_paths()
         self.model_path = resource_find("models/best_durian_model.tflite")
-        # self.audio_path = "audio.wav"
+        self.audio_path = "audio.wav"
         self.interpreter = None
 
-        # สีธีม
         main_bg = "#808836"
         secondary_bg = "#FFBF00"
         accent1 = "#FF9A00"
@@ -119,11 +119,8 @@ class DurianApp(App):
         )
         self.layout.add_widget(self.result_label)
 
-        # ✅ ย้ายมาตรงนี้ หลังจาก result_label ถูกสร้าง
         self.load_model()
-
         return self.layout
-
 
     def _update_rect(self, instance, value):
         self.rect_bg.size = instance.size
@@ -202,7 +199,6 @@ class DurianApp(App):
                 dtype = np.int16 if sample_width == 2 else np.uint8
                 waveform = np.frombuffer(audio_data, dtype=dtype).astype(np.float32) / 32768.0
 
-            # สร้าง dummy MFCC data สำหรับ inference (เพราะ librosa ใช้ไม่ได้)
             mfccs = np.zeros((4, 174), dtype=self.input_details[0]['dtype'])
             input_tensor = mfccs[np.newaxis, ..., np.newaxis]
 
