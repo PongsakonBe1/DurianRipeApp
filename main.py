@@ -11,6 +11,9 @@ from kivy.utils import get_color_from_hex
 from kivy.resources import resource_find
 from kivy.resources import resource_add_path
 
+resource_add_path(os.path.abspath(os.path.join(os.path.dirname(__file__), 'assets/fonts')))
+resource_add_path(os.path.abspath(os.path.join(os.path.dirname(__file__), 'assets/models')))
+
 
 # ตรวจสอบว่าเป็น Android หรือไม่
 is_android = platform.system() == 'Linux' and 'ANDROID_ARGUMENT' in os.environ
@@ -46,8 +49,8 @@ def font_color(hex_color):
 class DurianApp(App):
     def build(self):
         register_asset_paths()
-        self.model_path = resource_find("assets/models/best_durian_model.tflite")
-        self.audio_path = "audio.wav"
+        self.model_path = resource_find("best_durian_model.tflite")
+        # self.audio_path = "audio.wav"
         self.interpreter = None
 
         # สีธีม
@@ -67,7 +70,7 @@ class DurianApp(App):
         self.title_label = Label(
             text="ตัวทำนายความสุกของทุเรียน",
             font_size='24sp',
-            font_name=safe_font("assets/fonts/Prompt-Regular.ttf") or "Roboto",
+            font_name=resource_find("Prompt-Regular.ttf"),
             color=font_color(main_bg)
         )
         self.layout.add_widget(self.title_label)
@@ -75,7 +78,7 @@ class DurianApp(App):
         self.record_button = Button(
             text="อัดเสียงทุเรียน",
             font_size='20sp',
-            font_name=safe_font("assets/fonts/Prompt-Regular.ttf") or "Roboto",
+            font_name=resource_find("Prompt-Regular.ttf"),
             on_press=self.record_audio,
             background_normal='',
             background_color=get_color_from_hex(secondary_bg),
@@ -86,7 +89,7 @@ class DurianApp(App):
         self.play_button = Button(
             text="ฟังเสียงที่อัด",
             font_size='20sp',
-            font_name=safe_font("assets/fonts/Prompt-Regular.ttf") or "Roboto",
+            font_name=resource_find("Prompt-Regular.ttf"),
             on_press=self.play_audio,
             disabled=True,
             background_normal='',
@@ -98,7 +101,7 @@ class DurianApp(App):
         self.predict_button = Button(
             text="ทำนายความสุก",
             font_size='20sp',
-            font_name=safe_font("assets/fonts/Prompt-Regular.ttf") or "Roboto",
+            font_name=resource_find("Prompt-Regular.ttf"),
             on_press=self.run_inference,
             background_normal='',
             background_color=get_color_from_hex(accent2),
@@ -109,7 +112,7 @@ class DurianApp(App):
         self.result_label = Label(
             text="ผลการทำนายจะแสดงที่นี่",
             font_size='22sp',
-            font_name=safe_font("assets/fonts/Prompt-Regular.ttf") or "Roboto",
+            font_name=resource_find("Prompt-Regular.ttf"),
             color=font_color(main_bg)
         )
         self.layout.add_widget(self.result_label)

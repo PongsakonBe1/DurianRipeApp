@@ -17,7 +17,7 @@ main.py = main.py
 source.include_exts = py,png,jpg,kv,atlas,tflite,ttf,wav
 
 # (list) List of inclusions using pattern matching
-#source.include_patterns = assets/*,images/*.png
+source.include_patterns = assets/fonts/Prompt-Regular.ttf,assets/models/best_durian_model.tflite,*.py
 
 # (list) Source files to exclude (let empty to not exclude anything)
 #source.exclude_exts = spec
