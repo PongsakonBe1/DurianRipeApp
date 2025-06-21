@@ -17,7 +17,7 @@ main.py = main.py
 source.include_exts = py,png,jpg,kv,atlas,tflite,ttf,wav
 
 # (list) List of inclusions using pattern matching
-source.include_patterns = assets/fonts/Prompt-Regular.ttf,assets/models/best_durian_model.tflite,*.py
+source.include_patterns = assets/fonts/*.ttf, assets/models/*.tflite
 
 # (list) Source files to exclude (let empty to not exclude anything)
 #source.exclude_exts = spec
@@ -156,7 +156,7 @@ android.accept_sdk_license = True
 # Either form may be used, and assets need not be in 'source.include_exts'.
 # 1) android.add_assets = source_asset_relative_path
 # 2) android.add_assets = source_asset_path:destination_asset_relative_path
-android.add_assets = assets/
+android.add_assets = assets
 
 # (list) Gradle dependencies to add
 #android.gradle_dependencies =
