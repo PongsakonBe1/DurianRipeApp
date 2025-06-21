@@ -74,12 +74,12 @@ jobs:
         run: |
           find $ANDROID_NDK_ROOT -type f -name "*.py" -exec rm -f {} +
 
-      - name: Copy assets to root (ensure access by buildozer)
+      - name: Ensure asset directories exist and list them
         run: |
           mkdir -p assets/fonts
           mkdir -p assets/models
-          cp -r assets ./  # ensures ./assets exists
           ls -R assets
+
 
       - name: Build APK
         env:
