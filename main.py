@@ -11,9 +11,11 @@ from kivy.utils import get_color_from_hex
 from kivy.resources import resource_find
 from kivy.resources import resource_add_path
 
-resource_add_path(os.path.abspath(os.path.join(os.path.dirname(__file__), 'assets/fonts')))
-resource_add_path(os.path.abspath(os.path.join(os.path.dirname(__file__), 'assets/models')))
+resource_add_path(os.path.abspath(os.path.join(os.path.dirname(__file__), 'assets')))
 
+
+resolved = resource_find(path)
+print(f"[DEBUG] resolved font path for {path}: {resolved}")
 
 # ตรวจสอบว่าเป็น Android หรือไม่
 is_android = platform.system() == 'Linux' and 'ANDROID_ARGUMENT' in os.environ
