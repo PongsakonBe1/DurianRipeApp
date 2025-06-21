@@ -92,6 +92,9 @@ jobs:
           buildozer android debug --verbose \
             --ndk-path=$ANDROIDNDK \
             --sdk-path=$ANDROIDSDK
+            
+      - name: Check APK assets
+        run: unzip -l bin/*.apk | grep assets
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
