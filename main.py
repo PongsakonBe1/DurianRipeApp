@@ -37,7 +37,7 @@ def safe_font(path):
     resolved = resource_find(path)
     if not resolved:
         print(f"[ERROR] ไม่พบฟอนต์: {path}")
-        return ""  # หรือใช้ default font
+        return None  # หรือใช้ default font
     return resolved
 
 def font_color(hex_color):

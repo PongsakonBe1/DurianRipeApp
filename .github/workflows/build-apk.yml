@@ -70,12 +70,17 @@ jobs:
           mkdir -p .buildozer/android/platform
           git clone https://github.com/kivy/python-for-android.git .buildozer/android/platform/python-for-android
 
-      - name: Remove existing assets folder if any
-        run: rm -rf ./src/main/assets
-
       - name: Remove legacy Python2 scripts from NDK
         run: |
           find $ANDROID_NDK_ROOT -type f -name "*.py" -exec rm -f {} +
+
+      - name: Copy assets to root (ensure access by buildozer)
+        run: |
+          mkdir -p assets/fonts
+          mkdir -p assets/models
+          cp -r assets ./  # ensures ./assets exists
+          ls -R assets
+
       - name: Build APK
         env:
           ANDROIDSDK: ${{ env.ANDROID_SDK_ROOT }}
