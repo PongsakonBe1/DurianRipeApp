@@ -79,6 +79,8 @@ jobs:
           mkdir -p assets/fonts
           mkdir -p assets/models
           ls -R assets
+          ls -lh assets/models
+          ls -lh assets/fonts
 
 
       - name: Build APK
