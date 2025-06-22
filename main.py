@@ -19,7 +19,7 @@ resource_add_path(os.path.abspath("assets/fonts"))
 resource_add_path(os.path.abspath("assets/models"))
 
 if is_android:
-    from android.permissions import request_permissions, Permission, check_permission
+    from android.permissions import request_permissions, Permission
     from android.storage import app_storage_path
     request_permissions([Permission.RECORD_AUDIO, Permission.WRITE_EXTERNAL_STORAGE])
     audio_dir = app_storage_path()
@@ -35,11 +35,12 @@ except ImportError:
 
 def safe_font(path):
     resolved = resource_find(path)
-    print(f"[DEBUG] resolved font path for {path}: {resolved}")
-    if not resolved:
-        print(f"[ERROR] ไม่พบฟอนต์: {path}")
-        return None  # กลับ None เพื่อ fallback ไปใช้ค่า default ของ Kivy
-    return resolved
+    if resolved:
+        print(f"[DEBUG] ใช้ฟอนต์: {resolved}")
+        return resolved
+    else:
+        print(f"[WARN] ไม่พบฟอนต์ {path} → fallback เป็น Roboto")
+        return "Roboto"
 
 def font_color(hex_color):
     hex_color = hex_color.lstrip('#')
@@ -48,10 +49,17 @@ def font_color(hex_color):
     return get_color_from_hex('#000000') if luminance > 0.5 else get_color_from_hex('#FFFFFF')
 
 class DurianApp(App):
+    def tr(self, th_text, en_text):
+        return th_text if self.lang == 'th' else en_text
+
     def build(self):
         self.model_path = resource_find("assets/models/best_durian_model.tflite")
         self.audio_path = os.path.join(audio_dir, "audio.wav")
         self.interpreter = None
+
+        # ตรวจสอบฟอนต์
+        self.font_path = safe_font("assets/fonts/Prompt-Regular.ttf")
+        self.lang = 'th' if self.font_path != "Roboto" else 'en'
 
         main_bg = "#808836"
         secondary_bg = "#FFBF00"
@@ -66,20 +74,18 @@ class DurianApp(App):
             self.rect_bg = Rectangle(size=self.layout.size, pos=self.layout.pos)
         self.layout.bind(size=self._update_rect, pos=self._update_rect)
 
-        font_path = safe_font("assets/fonts/Prompt-Regular.ttf")
-
         self.title_label = Label(
-            text="ตัวทำนายความสุกของทุเรียน",
+            text=self.tr("ตัวทำนายความสุกของทุเรียน", "Durian Ripeness Classifier"),
             font_size='24sp',
-            font_name=font_path,
+            font_name=self.font_path,
             color=font_color(main_bg)
         )
         self.layout.add_widget(self.title_label)
 
         self.record_button = Button(
-            text="อัดเสียงทุเรียน",
+            text=self.tr("อัดเสียงทุเรียน", "Record Durian Sound"),
             font_size='20sp',
-            font_name=font_path,
+            font_name=self.font_path,
             on_press=self.record_audio,
             background_normal='',
             background_color=get_color_from_hex(secondary_bg),
@@ -88,9 +94,9 @@ class DurianApp(App):
         self.layout.add_widget(self.record_button)
 
         self.play_button = Button(
-            text="ฟังเสียงที่อัด",
+            text=self.tr("ฟังเสียงที่อัด", "Play Recorded Sound"),
             font_size='20sp',
-            font_name=font_path,
+            font_name=self.font_path,
             on_press=self.play_audio,
             disabled=True,
             background_normal='',
@@ -100,9 +106,9 @@ class DurianApp(App):
         self.layout.add_widget(self.play_button)
 
         self.predict_button = Button(
-            text="ทำนายความสุก",
+            text=self.tr("ทำนายความสุก", "Predict Ripeness"),
             font_size='20sp',
-            font_name=font_path,
+            font_name=self.font_path,
             on_press=self.run_inference,
             background_normal='',
             background_color=get_color_from_hex(accent2),
@@ -111,9 +117,9 @@ class DurianApp(App):
         self.layout.add_widget(self.predict_button)
 
         self.result_label = Label(
-            text="ผลการทำนายจะแสดงที่นี่",
+            text=self.tr("ผลการทำนายจะแสดงที่นี่", "Prediction will be shown here"),
             font_size='22sp',
-            font_name=font_path,
+            font_name=self.font_path,
             color=font_color(main_bg)
         )
         self.layout.add_widget(self.result_label)
@@ -128,7 +134,7 @@ class DurianApp(App):
     def load_model(self):
         if not self.model_path or not os.path.exists(self.model_path):
             print(f"[ERROR] ไม่พบโมเดล: {self.model_path}")
-            self.result_label.text = "ไม่พบโมเดล"
+            self.result_label.text = self.tr("ไม่พบโมเดล", "Model not found")
             return
         self.interpreter = Interpreter(model_path=self.model_path)
         self.interpreter.allocate_tensors()
@@ -136,7 +142,7 @@ class DurianApp(App):
         self.output_details = self.interpreter.get_output_details()
 
     def record_audio(self, instance):
-        self.result_label.text = "กำลังอัดเสียง..."
+        self.result_label.text = self.tr("กำลังอัดเสียง...", "Recording...")
         self.record_button.disabled = True
         threading.Thread(target=self._record_thread).start()
 
@@ -160,16 +166,16 @@ class DurianApp(App):
             recorder.stop()
             recorder.release()
 
-            self.update_status("อัดเสียงสำเร็จแล้ว")
+            self.update_status(self.tr("อัดเสียงสำเร็จแล้ว", "Recording complete"))
             self.play_button.disabled = False
         except Exception as e:
-            self.update_status(f"อัดเสียงล้มเหลว: {e}")
+            self.update_status(self.tr(f"อัดเสียงล้มเหลว: {e}", f"Recording failed: {e}"))
             print("[ERROR] อัดเสียงล้มเหลว:", e)
         finally:
             self.record_button.disabled = False
 
     def play_audio(self, instance):
-        self.update_status("กำลังเล่นเสียง...")
+        self.update_status(self.tr("กำลังเล่นเสียง...", "Playing sound..."))
         threading.Thread(target=self._play_thread).start()
 
     def _play_thread(self):
@@ -181,7 +187,7 @@ class DurianApp(App):
             player.prepare()
             player.start()
         except Exception as e:
-            self.update_status(f"เล่นเสียงล้มเหลว: {e}")
+            self.update_status(self.tr(f"เล่นเสียงล้มเหลว: {e}", f"Playback failed: {e}"))
             print("[ERROR] เล่นเสียงล้มเหลว:", e)
         finally:
             self.record_button.disabled = False
@@ -190,7 +196,7 @@ class DurianApp(App):
         try:
             import wave
             if not os.path.exists(self.audio_path):
-                self.result_label.text = "ไม่พบไฟล์เสียง"
+                self.result_label.text = self.tr("ไม่พบไฟล์เสียง", "Audio file not found")
                 return
 
             with wave.open(self.audio_path, 'rb') as wav_file:
@@ -200,7 +206,7 @@ class DurianApp(App):
                 dtype = np.int16 if sample_width == 2 else np.uint8
                 waveform = np.frombuffer(audio_data, dtype=dtype).astype(np.float32) / 32768.0
 
-            mfccs = np.zeros((4, 174), dtype=self.input_details[0]['dtype'])  # เปลี่ยนตามโมเดลจริง
+            mfccs = np.zeros((4, 174), dtype=self.input_details[0]['dtype'])  # ปรับให้ตรงกับโมเดล
             input_tensor = mfccs[np.newaxis, ..., np.newaxis]
 
             self.interpreter.set_tensor(self.input_details[0]['index'], input_tensor)
@@ -208,11 +214,14 @@ class DurianApp(App):
             output = self.interpreter.get_tensor(self.output_details[0]['index'])[0]
 
             confidence = float(output[1]) if len(output) == 2 else float(output[0])
-            class_names = ['ดิบ', 'สุก']
+            class_names = [self.tr("ดิบ", "Unripe"), self.tr("สุก", "Ripe")]
             index = 1 if confidence >= 0.5 else 0
-            self.result_label.text = f"ผลทำนาย: {class_names[index]} ({confidence*100:.2f}%)"
+            self.result_label.text = self.tr(
+                f"ผลทำนาย: {class_names[index]} ({confidence*100:.2f}%)",
+                f"Prediction: {class_names[index]} ({confidence*100:.2f}%)"
+            )
         except Exception as e:
-            self.result_label.text = f"ทำนายล้มเหลว: {e}"
+            self.result_label.text = self.tr(f"ทำนายล้มเหลว: {e}", f"Inference failed: {e}")
             print("[ERROR] ทำนายล้มเหลว:", e)
 
     def update_status(self, text):
