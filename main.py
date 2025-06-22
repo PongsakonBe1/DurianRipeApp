@@ -8,14 +8,23 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
 from kivy.uix.label import Label
 from kivy.utils import get_color_from_hex
-from kivy.resources import resource_find
-from kivy.resources import resource_add_path
-
-# เพิ่ม path สำหรับ desktop และ Android
-resource_add_path(os.path.abspath("assets"))
+from kivy.resources import resource_find, resource_add_path
 
 # ตรวจสอบว่าเป็น Android หรือไม่
 is_android = platform.system() == 'Linux' and 'ANDROID_ARGUMENT' in os.environ
+
+# เพิ่ม path สำหรับ desktop และ Android
+resource_add_path(os.path.abspath("assets"))
+resource_add_path(os.path.abspath("assets/fonts"))
+resource_add_path(os.path.abspath("assets/models"))
+
+if is_android:
+    from android.permissions import request_permissions, Permission
+    from android.storage import app_storage_path
+    request_permissions([Permission.RECORD_AUDIO, Permission.WRITE_EXTERNAL_STORAGE])
+    audio_dir = app_storage_path()
+else:
+    audio_dir = "."
 
 # ใช้ TFLite Interpreter
 try:
@@ -23,17 +32,6 @@ try:
     Interpreter = tflite.Interpreter
 except ImportError:
     from tensorflow.lite.python.interpreter import Interpreter
-
-def register_asset_paths():
-    if is_android:
-        from android.storage import app_storage_path
-        base_path = app_storage_path()
-        resource_add_path(os.path.join(base_path, "assets"))
-        resource_add_path(os.path.join(base_path, "assets", "fonts"))
-        resource_add_path(os.path.join(base_path, "assets", "models"))
-    else:
-        resource_add_path(os.path.abspath("assets/fonts"))
-        resource_add_path(os.path.abspath("assets/models"))
 
 def safe_font(path):
     resolved = resource_find(path)
@@ -51,9 +49,8 @@ def font_color(hex_color):
 
 class DurianApp(App):
     def build(self):
-        register_asset_paths()
-        self.model_path = resource_find("models/best_durian_model.tflite")
-        self.audio_path = "audio.wav"
+        self.model_path = resource_find("assets/models/best_durian_model.tflite")
+        self.audio_path = os.path.join(audio_dir, "audio.wav")
         self.interpreter = None
 
         main_bg = "#808836"
@@ -72,7 +69,7 @@ class DurianApp(App):
         self.title_label = Label(
             text="ตัวทำนายความสุกของทุเรียน",
             font_size='24sp',
-            font_name=safe_font("fonts/Prompt-Regular.ttf"),
+            font_name=safe_font("assets/fonts/Prompt-Regular.ttf"),
             color=font_color(main_bg)
         )
         self.layout.add_widget(self.title_label)
@@ -80,7 +77,7 @@ class DurianApp(App):
         self.record_button = Button(
             text="อัดเสียงทุเรียน",
             font_size='20sp',
-            font_name=safe_font("fonts/Prompt-Regular.ttf"),
+            font_name=safe_font("assets/fonts/Prompt-Regular.ttf"),
             on_press=self.record_audio,
             background_normal='',
             background_color=get_color_from_hex(secondary_bg),
@@ -91,7 +88,7 @@ class DurianApp(App):
         self.play_button = Button(
             text="ฟังเสียงที่อัด",
             font_size='20sp',
-            font_name=safe_font("fonts/Prompt-Regular.ttf"),
+            font_name=safe_font("assets/fonts/Prompt-Regular.ttf"),
             on_press=self.play_audio,
             disabled=True,
             background_normal='',
@@ -103,7 +100,7 @@ class DurianApp(App):
         self.predict_button = Button(
             text="ทำนายความสุก",
             font_size='20sp',
-            font_name=safe_font("fonts/Prompt-Regular.ttf"),
+            font_name=safe_font("assets/fonts/Prompt-Regular.ttf"),
             on_press=self.run_inference,
             background_normal='',
             background_color=get_color_from_hex(accent2),
@@ -114,7 +111,7 @@ class DurianApp(App):
         self.result_label = Label(
             text="ผลการทำนายจะแสดงที่นี่",
             font_size='22sp',
-            font_name=safe_font("fonts/Prompt-Regular.ttf"),
+            font_name=safe_font("assets/fonts/Prompt-Regular.ttf"),
             color=font_color(main_bg)
         )
         self.layout.add_widget(self.result_label)
@@ -127,7 +124,8 @@ class DurianApp(App):
         self.rect_bg.pos = instance.pos
 
     def load_model(self):
-        if not os.path.exists(self.model_path):
+        if not self.model_path or not os.path.exists(self.model_path):
+            print(f"[ERROR] ไม่พบโมเดล: {self.model_path}")
             self.result_label.text = "ไม่พบโมเดล"
             return
         self.interpreter = Interpreter(model_path=self.model_path)
@@ -143,9 +141,6 @@ class DurianApp(App):
     def _record_thread(self):
         try:
             from jnius import autoclass
-            from android.permissions import request_permissions, Permission
-            request_permissions([Permission.RECORD_AUDIO, Permission.WRITE_EXTERNAL_STORAGE])
-
             MediaRecorder = autoclass('android.media.MediaRecorder')
             recorder = MediaRecorder()
 
