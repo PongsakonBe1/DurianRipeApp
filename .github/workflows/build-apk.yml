@@ -82,6 +82,10 @@ jobs:
           ls -R fonts
           ls -lh models
 
+      - name: Clean buildozer cache completely
+        run: |
+            rm -rf .buildozer
+            rm -rf bin
       - name: Build APK
         env:
           ANDROIDSDK: ${{ env.ANDROID_SDK_ROOT }}
