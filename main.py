@@ -15,8 +15,8 @@ is_android = platform.system() == 'Linux' and 'ANDROID_ARGUMENT' in os.environ
 
 # เพิ่ม path assets (พยายามให้ถูกต้องก่อน)
 resource_add_path(os.path.abspath("assets"))
-resource_add_path(os.path.abspath("assets/fonts"))
-resource_add_path(os.path.abspath("assets/models"))
+resource_add_path(os.path.abspath(os.path.join("assets", "fonts")))
+resource_add_path(os.path.abspath(os.path.join("assets", "models")))
 
 if is_android:
     from android.permissions import request_permissions, Permission
@@ -66,9 +66,9 @@ class DurianApp(App):
 
     def build(self):
         # โหลดโมเดลและฟอนต์
-        self.model_path = find_asset("assets/models/best_durian_model.tflite")
+        self.model_path = find_asset("models/best_durian_model.tflite")
         self.audio_path = os.path.join(audio_dir, "audio.wav")
-        self.font_path = safe_font(find_asset("assets/fonts/Prompt-Regular.ttf"))
+        self.font_path = safe_font(find_asset("fonts/Prompt-Regular.ttf"))
         self.lang = 'th' if self.font_path != "Roboto" else 'en'
         self.interpreter = None
 
