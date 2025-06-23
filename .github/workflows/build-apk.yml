@@ -79,8 +79,8 @@ jobs:
 
       - name: Ensure asset directories exist and list them
         run: |
-          ls -R assets/fonts
-          ls -lh assets/models
+          ls -R fonts
+          ls -lh models
 
       - name: Build APK
         env:
