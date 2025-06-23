@@ -14,7 +14,7 @@ from kivy.resources import resource_find, resource_add_path
 is_android = platform.system() == 'Linux' and 'ANDROID_ARGUMENT' in os.environ
 
 # เพิ่ม path assets (พยายามให้ถูกต้องก่อน)
-resource_add_path(os.path.abspath("assets"))
+resource_add_path(os.path.abspath("."))
 resource_add_path(os.path.abspath(os.path.join("assets", "fonts")))
 resource_add_path(os.path.abspath(os.path.join("assets", "models")))
 
