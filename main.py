@@ -13,7 +13,7 @@ from kivy.resources import resource_find, resource_add_path
 # ตรวจสอบว่าเป็น Android หรือไม่
 is_android = platform.system() == 'Linux' and 'ANDROID_ARGUMENT' in os.environ
 
-# เพิ่ม path สำหรับ asset
+# เพิ่ม path assets (พยายามให้ถูกต้องก่อน)
 resource_add_path(os.path.abspath("assets"))
 resource_add_path(os.path.abspath("assets/fonts"))
 resource_add_path(os.path.abspath("assets/models"))
@@ -33,18 +33,30 @@ try:
 except ImportError:
     from tensorflow.lite.python.interpreter import Interpreter
 
-def safe_font(path):
-    resolved = resource_find(path)
-    if resolved:
-        print(f"[DEBUG] ใช้ฟอนต์: {resolved}")
-        return resolved
-    else:
-        print(f"[WARN] ไม่พบฟอนต์ {path} → fallback เป็น Roboto")
-        return "Roboto"
+# ฟังก์ชัน fallback asset path
+def find_asset(path):
+    found = resource_find(path)
+    if found:
+        return found
+    fallback_path = f"assets/{path}" if not path.startswith("assets/") else path
+    found_fallback = resource_find(fallback_path)
+    if found_fallback:
+        print(f"[WARN] ใช้ fallback asset: {fallback_path}")
+        return found_fallback
+    print(f"[ERROR] ไม่พบ asset: {path}")
+    return None
 
+# ฟังก์ชันฟอนต์ fallback
+def safe_font(path):
+    if not path:
+        print("[WARN] ฟอนต์ไม่พบ → ใช้ Roboto")
+        return "Roboto"
+    return path
+
+# คำนวณสีข้อความจากพื้นหลัง
 def font_color(hex_color):
     hex_color = hex_color.lstrip('#')
-    r, g, b = tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
+    r, g, b = [int(hex_color[i:i+2], 16) for i in (0, 2, 4)]
     luminance = (0.299*r + 0.587*g + 0.114*b)/255
     return get_color_from_hex('#000000') if luminance > 0.5 else get_color_from_hex('#FFFFFF')
 
@@ -53,27 +65,28 @@ class DurianApp(App):
         return th_text if self.lang == 'th' else en_text
 
     def build(self):
-        self.model_path = resource_find("assets/models/best_durian_model.tflite")
+        # โหลดโมเดลและฟอนต์
+        self.model_path = find_asset("models/best_durian_model.tflite")
         self.audio_path = os.path.join(audio_dir, "audio.wav")
+        self.font_path = safe_font(find_asset("fonts/Prompt-Regular.ttf"))
+        self.lang = 'th' if self.font_path != "Roboto" else 'en'
         self.interpreter = None
 
-        # ตรวจสอบฟอนต์
-        self.font_path = safe_font("assets/fonts/Prompt-Regular.ttf")
-        self.lang = 'th' if self.font_path != "Roboto" else 'en'
-
+        # สีธีม
         main_bg = "#808836"
         secondary_bg = "#FFBF00"
         accent1 = "#FF9A00"
         accent2 = "#D10363"
 
+        # Layout หลัก
         self.layout = BoxLayout(orientation="vertical", padding=20, spacing=15)
-
         from kivy.graphics import Color, Rectangle
         with self.layout.canvas.before:
             Color(*get_color_from_hex(main_bg))
             self.rect_bg = Rectangle(size=self.layout.size, pos=self.layout.pos)
         self.layout.bind(size=self._update_rect, pos=self._update_rect)
 
+        # Title
         self.title_label = Label(
             text=self.tr("ตัวทำนายความสุกของทุเรียน", "Durian Ripeness Classifier"),
             font_size='24sp',
@@ -82,6 +95,7 @@ class DurianApp(App):
         )
         self.layout.add_widget(self.title_label)
 
+        # ปุ่มอัดเสียง
         self.record_button = Button(
             text=self.tr("อัดเสียงทุเรียน", "Record Durian Sound"),
             font_size='20sp',
@@ -93,6 +107,7 @@ class DurianApp(App):
         )
         self.layout.add_widget(self.record_button)
 
+        # ปุ่มเล่นเสียง
         self.play_button = Button(
             text=self.tr("ฟังเสียงที่อัด", "Play Recorded Sound"),
             font_size='20sp',
@@ -105,6 +120,7 @@ class DurianApp(App):
         )
         self.layout.add_widget(self.play_button)
 
+        # ปุ่มทำนาย
         self.predict_button = Button(
             text=self.tr("ทำนายความสุก", "Predict Ripeness"),
             font_size='20sp',
@@ -116,6 +132,7 @@ class DurianApp(App):
         )
         self.layout.add_widget(self.predict_button)
 
+        # ป้ายผลลัพธ์
         self.result_label = Label(
             text=self.tr("ผลการทำนายจะแสดงที่นี่", "Prediction will be shown here"),
             font_size='22sp',
@@ -151,7 +168,6 @@ class DurianApp(App):
             from jnius import autoclass
             MediaRecorder = autoclass('android.media.MediaRecorder')
             recorder = MediaRecorder()
-
             recorder.setAudioSource(MediaRecorder.AudioSource.MIC)
             recorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP)
             recorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB)
@@ -159,10 +175,7 @@ class DurianApp(App):
 
             recorder.prepare()
             recorder.start()
-
-            import time
-            time.sleep(5)
-
+            import time; time.sleep(5)
             recorder.stop()
             recorder.release()
 
@@ -206,7 +219,7 @@ class DurianApp(App):
                 dtype = np.int16 if sample_width == 2 else np.uint8
                 waveform = np.frombuffer(audio_data, dtype=dtype).astype(np.float32) / 32768.0
 
-            mfccs = np.zeros((4, 174), dtype=self.input_details[0]['dtype'])  # ปรับให้ตรงกับโมเดล
+            mfccs = np.zeros((4, 174), dtype=self.input_details[0]['dtype'])  # ปรับตามโมเดล
             input_tensor = mfccs[np.newaxis, ..., np.newaxis]
 
             self.interpreter.set_tensor(self.input_details[0]['index'], input_tensor)

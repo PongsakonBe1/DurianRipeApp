@@ -76,8 +76,6 @@ jobs:
 
       - name: Ensure asset directories exist and list them
         run: |
-          mkdir -p assets/fonts
-          mkdir -p assets/models
           ls -R assets
           ls -lh assets/models
           ls -lh assets/fonts
@@ -97,6 +95,11 @@ jobs:
             
       - name: Check APK assets
         run: unzip -l bin/*.apk | grep assets
+
+      - name: Verify font and model are included
+        run: |
+          unzip -l bin/*.apk | grep "fonts/Prompt-Regular.ttf" || (echo "Font not found in APK!" && exit 1)
+          unzip -l bin/*.apk | grep "models/best_durian_model.tflite" || (echo "Model not found in APK!" && exit 1)
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
