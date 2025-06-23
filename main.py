@@ -66,9 +66,9 @@ class DurianApp(App):
 
     def build(self):
         # โหลดโมเดลและฟอนต์
-        self.model_path = find_asset("models/best_durian_model.tflite")
+        self.model_path = find_asset("assets/models/best_durian_model.tflite")
         self.audio_path = os.path.join(audio_dir, "audio.wav")
-        self.font_path = safe_font(find_asset("fonts/Prompt-Regular.ttf"))
+        self.font_path = safe_font(find_asset("assets/fonts/Prompt-Regular.ttf"))
         self.lang = 'th' if self.font_path != "Roboto" else 'en'
         self.interpreter = None
 
