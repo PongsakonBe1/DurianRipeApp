@@ -62,12 +62,11 @@ jobs:
           python3 -m pip install setuptools==65.5.0
           python3 -m pip install sh==1.14.3 buildozer==1.5.0 cython==0.29.33 python-for-android==2024.1.21
 
-      - name: Clean previous build cache
-        run: rm -rf ./.buildozer
+      - name: Clean buildozer and bin directories
+        run: |
+          rm -rf .buildozer
+          rm -rf bin
 
-      - name: Remove previous p4a clone (if exists)
-        run: rm -rf .buildozer/android/platform/python-for-android
-      
       - name: Clone python-for-android (force override)
         run: |
           mkdir -p .buildozer/android/platform
@@ -77,15 +76,12 @@ jobs:
         run: |
           find $ANDROID_NDK_ROOT -type f -name "*.py" -exec rm -f {} +
 
-      - name: Ensure asset directories exist and list them
+      - name: Verify asset directories exist
         run: |
-          ls -R fonts
-          ls -lh models
+          echo "🎯 Checking assets/fonts and assets/models"
+          ls -lh assets/fonts
+          ls -lh assets/models
 
-      - name: Clean buildozer cache completely
-        run: |
-            rm -rf .buildozer
-            rm -rf bin
       - name: Build APK
         env:
           ANDROIDSDK: ${{ env.ANDROID_SDK_ROOT }}
@@ -97,7 +93,7 @@ jobs:
           buildozer android debug --verbose \
             --ndk-path=$ANDROIDNDK \
             --sdk-path=$ANDROIDSDK
-            
+
       - name: Check APK assets
         run: unzip -l bin/*.apk | grep assets
 
